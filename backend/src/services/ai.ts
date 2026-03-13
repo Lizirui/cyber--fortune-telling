@@ -1,8 +1,17 @@
-import { generateObject } from 'ai';
-import { openai } from '@ai-sdk/openai';
-import { z } from 'zod';
+import OpenAI from 'openai';
 
 type Rarity = 0 | 1 | 2 | 3 | 4 | 5;
+
+const OPENAI_API_KEY = process.env.DEEPSEEK_API_KEY;
+
+if (!OPENAI_API_KEY) {
+  throw new Error('DEEPSEEK_API_KEY not configured');
+}
+
+const client = new OpenAI({
+  apiKey: OPENAI_API_KEY,
+  baseURL: 'https://api.deepseek.com'
+});
 
 // 稀有度概率分布
 const RARITY_WEIGHTS: Rarity[] = [
@@ -31,16 +40,18 @@ const RARITY_PROMPTS: Record<Rarity, string> = {
 export async function generateBlessing(): Promise<{ blessing: string; rarity: Rarity }> {
   const rarity = getRandomRarity();
 
-  const { object } = await generateObject({
-    model: openai('deepseek-chat'),
-    schema: z.object({
-      blessing: z.string().describe('The generated blessing message in Chinese, 60-80 characters')
-    }),
-    prompt: RARITY_PROMPTS[rarity]
+  const completion = await client.chat.completions.create({
+    model: 'deepseek-chat',
+    messages: [
+      { role: 'user', content: RARITY_PROMPTS[rarity] }
+    ],
+    temperature: 0.8
   });
 
+  const blessing = completion.choices[0]?.message?.content || '愿你心想事成';
+
   return {
-    blessing: object.blessing,
+    blessing,
     rarity
   };
 }

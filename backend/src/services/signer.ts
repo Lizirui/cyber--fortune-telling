@@ -30,8 +30,10 @@ export async function generateSignature(
     )
   );
 
-  const ethSignedHash = ethers.hashMessage(ethers.toBeHex(hash, 32));
-  const signature = await signer.signMessage(ethers.arrayify(ethSignedHash));
+  //以太坊签名格式：添加 "\x19Ethereum Signed Message:\n32" 前缀
+  const ethMessage = '\x19Ethereum Signed Message:\n32' + hash.slice(2);
+  const ethHash = ethers.keccak256(ethers.toUtf8Bytes(ethMessage));
+  const signature = await signer.signMessage(ethers.getBytes(ethHash));
 
   return signature;
 }
