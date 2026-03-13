@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 500">
+  <defs>
+    <linearGradient id="urGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#dc2626"/>
+      <stop offset="50%" style="stop-color:#f97316"/>
+      <stop offset="100%" style="stop-color:#dc2626"/>
+    </linearGradient>
+  </defs>
+  <rect width="400" height="500" fill="#1a0505"/>
+  <rect x="10" y="10" width="380" height="480" fill="none" stroke="url(#urGrad)" stroke-width="8" rx="10"/>
+  <text x="200" y="60" font-family="monospace" font-size="28" fill="url(#urGrad)" text-anchor="middle">UR</text>
+  <text x="200" y="250" font-family="monospace" font-size="20" fill="#fecaca" text-anchor="middle">{{BLESSING}}</text>
+  <text x="200" y="450" font-family="monospace" font-size="14" fill="#991b1b" text-anchor="middle">Cyber Fortune #{{TOKEN_ID}}</text>
+</svg>
