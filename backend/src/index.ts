@@ -2,6 +2,7 @@ import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
 import mintRoutes from './routes/mint.js';
+import nftRoutes from './routes/nft.js';
 
 dotenv.config();
 
@@ -15,6 +16,7 @@ app.use(express.json());
 
 // 路由
 app.use('/api/mint', mintRoutes);
+app.use('/api/nft', nftRoutes);
 
 // 健康检查
 app.get('/health', (req, res) => {
