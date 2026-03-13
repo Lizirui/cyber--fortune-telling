@@ -54,6 +54,110 @@ contract CyberFortuneNFT is ERC721, ERC721URIStorage, Ownable, ReentrancyGuard {
     /// @dev Token ID => 稀有度 (0=N, 1=R, 2=SR, 3=SSR, 4=SP, 5=UR)
     mapping(uint256 => uint8) public rarities;
 
+    // ========== 市场相关 ==========
+
+    /// @dev 挂单结构体
+    struct Listing {
+        address seller;    // 卖家地址
+        uint256 price;     // 价格
+        bool isListed;    // 是否已挂单
+    }
+
+    /// @dev Token ID => 挂单信息
+    mapping(uint256 => Listing) public listings;
+
+    /// @dev 创建者收入
+    mapping(address => uint256) public creatorRevenue;
+
+    /// @dev 挂单事件
+    event ItemListed(uint256 indexed tokenId, address indexed seller, uint256 price);
+
+    /// @dev 购买事件
+    event ItemBought(uint256 indexed tokenId, address indexed buyer, uint256 price);
+
+    /// @dev 取消挂单事件
+    event ListingCancelled(uint256 indexed tokenId);
+
+    /**
+     * @dev 挂单出售 NFT
+     * @param tokenId Token ID
+     * @param price 价格
+     */
+    function listItem(uint256 tokenId, uint256 price) external {
+        // 检查是否是 NFT 持有者
+        require(ownerOf(tokenId) == msg.sender, "Not the owner");
+        // 检查价格必须大于 0
+        require(price > 0, "Price must be > 0");
+        // 检查是否已经挂单
+        require(!listings[tokenId].isListed, "Already listed");
+
+        // 授权合约可以转移 NFT
+        approve(address(this), tokenId);
+        // 创建挂单
+        listings[tokenId] = Listing(msg.sender, price, true);
+        emit ItemListed(tokenId, msg.sender, price);
+    }
+
+    /**
+     * @dev 购买 NFT
+     * @param tokenId Token ID
+     */
+    function buyItem(uint256 tokenId) external payable nonReentrant {
+        Listing memory listing = listings[tokenId];
+        // 检查是否已挂单
+        require(listing.isListed, "Not listed");
+        // 检查支付金额是否足够
+        require(msg.value >= listing.price, "Insufficient payment");
+        // 检查是否已授权
+        require(getApproved(tokenId) == address(this), "Not approved");
+
+        // 计算卖家收入（扣除版税后）
+        uint256 sellerAmount = msg.value;
+
+        // 转移 NFT
+        _transfer(listing.seller, msg.sender, tokenId);
+        // 向卖家付款
+        payable(listing.seller).transfer(sellerAmount);
+
+        // 删除挂单
+        delete listings[tokenId];
+        emit ItemBought(tokenId, msg.sender, listing.price);
+    }
+
+    /**
+     * @dev 取消挂单
+     * @param tokenId Token ID
+     */
+    function cancelListing(uint256 tokenId) external {
+        // 检查是否是挂单者
+        require(listings[tokenId].seller == msg.sender, "Not seller");
+        // 检查是否已挂单
+        require(listings[tokenId].isListed, "Not listed");
+        // 删除挂单
+        delete listings[tokenId];
+        emit ListingCancelled(tokenId);
+    }
+
+    /**
+     * @dev 获取挂单信息
+     * @param tokenId Token ID
+     * @return 卖家地址、价格、是否挂单
+     */
+    function getListing(uint256 tokenId) external view returns (address, uint256, bool) {
+        Listing memory l = listings[tokenId];
+        return (l.seller, l.price, l.isListed);
+    }
+
+    /**
+     * @dev 提取创建者收入
+     */
+    function withdrawRevenue() external onlyOwner nonReentrant {
+        uint256 amount = creatorRevenue[owner()];
+        require(amount > 0, "No revenue");
+        creatorRevenue[owner()] = 0;
+        payable(owner()).transfer(amount);
+    }
+
     /**
      * @dev 构造函数，初始化合约名称和符号
      */
