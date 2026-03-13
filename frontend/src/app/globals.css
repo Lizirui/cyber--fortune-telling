@@ -1,9 +1,49 @@
+@import "tailwindcss";
+
+@theme {
+  --color-cyber-bg: #0a0a0f;
+  --color-cyber-primary: #00fff5;
+  --color-cyber-secondary: #ff00ff;
+  --color-cyber-accent: #ffff00;
+
+  --color-rarity-n: #888888;
+  --color-rarity-r: #00ff00;
+  --color-rarity-sr: #00aaff;
+  --color-rarity-ssr: #ff00ff;
+  --color-rarity-sp: #ff8800;
+  --color-rarity-ur: #ffd700;
+
+  --animate-glow: glow 2s ease-in-out infinite alternate;
+  --animate-spin-slow: spin 3s linear infinite;
+}
+
+@keyframes glow {
+  0% { box-shadow: 0 0 5px #00fff5; }
+  100% { box-shadow: 0 0 20px #00fff5, 0 0 30px #00fff5; }
+}
+
 :root {
-  --background: #0a0a0a;
-  --foreground: #ededed;
+  --cyber-bg: #0a0a0f;
+  --cyber-primary: #00fff5;
+  --cyber-secondary: #ff00ff;
+  --cyber-accent: #ffff00;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
+  background-color: var(--cyber-bg);
+  color: #ffffff;
+  font-family: ui-monospace, monospace;
+}
+
+/* 霓虹边框 */
+.neon-border {
+  border: 1px solid var(--cyber-primary);
+  box-shadow: 0 0 5px var(--cyber-primary), inset 0 0 5px var(--cyber-primary);
+}
+
+/* 玻璃拟态 */
+.glass {
+  background: rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
 }
