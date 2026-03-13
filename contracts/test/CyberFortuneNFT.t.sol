@@ -64,4 +64,18 @@ contract CyberFortuneNFTTest is Test {
         assertEq(price, 0.1 ether);
         assertTrue(isListed);
     }
+
+    /**
+     * @dev 测试 ERC-2981 版税接口
+     */
+    function test_SupportERC2981() public {
+        // 检查是否支持 ERC-2981 接口
+        bytes4 interfaceId = bytes4(0x2a55205a);
+        assertTrue(nft.supportsInterface(interfaceId));
+
+        // 检查版税信息
+        (address receiver, uint256 royaltyAmount) = nft.royaltyInfo(0, 1 ether);
+        assertEq(receiver, owner);
+        assertEq(royaltyAmount, 0.05 ether); // 5%
+    }
 }

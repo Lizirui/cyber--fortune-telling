@@ -8,13 +8,14 @@ import "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
 import "@openzeppelin/contracts/utils/cryptography/MessageHashUtils.sol";
 import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 import "@openzeppelin/contracts/utils/Strings.sol";
+import "@openzeppelin/contracts/token/common/ERC2981.sol";
 
 /**
  * @title CyberFortuneNFT
  * @dev 赛博算命 NFT 合约
  *      用户可以通过支付费用 mint 祝福语 NFT
  */
-contract CyberFortuneNFT is ERC721, ERC721URIStorage, Ownable, ReentrancyGuard {
+contract CyberFortuneNFT is ERC721, ERC721URIStorage, ERC2981, Ownable, ReentrancyGuard {
     /// @dev 使用 MessageHashUtils 库进行签名验证
     using MessageHashUtils for bytes32;
 
@@ -159,9 +160,12 @@ contract CyberFortuneNFT is ERC721, ERC721URIStorage, Ownable, ReentrancyGuard {
     }
 
     /**
-     * @dev 构造函数，初始化合约名称和符号
+     * @dev 构造函数，初始化合约名称和符号，以及默认版税
      */
-    constructor() ERC721("Cyber Fortune", "CFORTUNE") Ownable(msg.sender) {}
+    constructor() ERC721("Cyber Fortune", "CFORTUNE") Ownable(msg.sender) {
+        // 设置默认版税为 5%
+        _setDefaultRoyalty(owner(), 500);
+    }
 
     /**
      * @dev Mint 祝福语 NFT
@@ -272,7 +276,7 @@ contract CyberFortuneNFT is ERC721, ERC721URIStorage, Ownable, ReentrancyGuard {
      * @param interfaceId 接口 ID
      */
     function supportsInterface(bytes4 interfaceId)
-        public view override(ERC721, ERC721URIStorage) returns (bool)
+        public view override(ERC721, ERC721URIStorage, ERC2981) returns (bool)
     {
         return super.supportsInterface(interfaceId);
     }
