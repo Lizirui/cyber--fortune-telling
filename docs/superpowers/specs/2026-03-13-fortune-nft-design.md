@@ -1,8 +1,8 @@
-# Fortune NFT - AI 祝福语盲盒 NFT 设计文档
+# Fortune NFT - 赛博算命 NFT 设计文档
 
 ## 1. 项目概述
 
-**项目名称**: Fortune NFT (算命 NFT)
+**项目名称**: Fortune NFT (赛博算命 / Cyber Fortune)
 
 **项目定位**: 一个趣味盲盒 NFT 项目，用户 mint 后可获得由 AI 实时生成的 60-80 字祝福语，稀有度在 mint 后揭晓，为用户带来"开盲盒"的惊喜体验。
 
