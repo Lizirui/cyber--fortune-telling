@@ -1,0 +1,21 @@
+{
+  "name": "@cyber-fortune/contracts",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "forge build",
+    "test": "forge test",
+    "deploy": "forge script script/Deploy.s.sol --broadcast --verify",
+    "deploy:sepolia": "forge script script/Deploy.s.sol --broadcast --verify --network base-sepolia",
+    "deploy:mainnet": "forge script script/Deploy.s.sol --broadcast --verify --network base",
+    "clean": "forge clean"
+  },
+  "dependencies": {
+    "forge-std": "github:foundry-rs/forge-std",
+    "openzeppelin-contracts": "github:OpenZeppelin/openzeppelin-contracts"
+  },
+  "devDependencies": {
+    "foundry-rs/foundry": "^0.3.0"
+  }
+}
