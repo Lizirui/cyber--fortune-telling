@@ -24,7 +24,7 @@ pnpm test             # 运行测试
 
 - **框架**: Next.js 14 (App Router)
 - **Web3**: wagmi + RainbowKit + viem
-- **样式**: CSS Modules / Tailwind（如有）
+- **样式**: Tailwind CSS
 - **状态管理**: React Query + wagmi hooks
 
 ## 关键目录

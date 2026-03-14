@@ -1,1 +1,39 @@
+# 依赖
 node_modules
+
+# 环境变量
+.env
+.env.*
+!.env.example
+
+# Next.js
+frontend/.next/
+frontend/out/
+
+# 后端编译输出
+backend/dist/
+
+# Foundry (智能合约)
+contracts/out/
+contracts/cache/
+
+# 日志
+*.log
+npm-debug.log*
+pnpm-debug.log*
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# 系统文件
+.DS_Store
+Thumbs.db
+
+# 本地 Claude 设置
+.claude/settings.local.json
+
+# pnpm (可选 - 如果想锁定精确版本可以保留)
+# pnpm-lock.yaml
