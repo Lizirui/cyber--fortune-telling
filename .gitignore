@@ -16,6 +16,7 @@
 # Foundry (智能合约)
 **/out/
 **/cache/
+**/broadcast/
 
 # 日志
 *.log
