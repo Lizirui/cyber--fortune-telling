@@ -2,12 +2,12 @@ import OpenAI from 'openai';
 
 type Rarity = 0 | 1 | 2 | 3 | 4 | 5;
 
-const OPENAI_API_KEY = process.env.DEEPSEEK_API_KEY;
-
-let client: OpenAI | null = null;
-
-if (OPENAI_API_KEY) {
-  client = new OpenAI({
+function getClient() {
+  const OPENAI_API_KEY = process.env.DEEPSEEK_API_KEY;
+  if (!OPENAI_API_KEY) {
+    return null;
+  }
+  return new OpenAI({
     apiKey: OPENAI_API_KEY,
     baseURL: 'https://api.deepseek.com'
   });
@@ -49,6 +49,7 @@ const RARITY_PROMPTS: Record<Rarity, string> = {
 
 export async function generateBlessing(): Promise<{ blessing: string; rarity: Rarity }> {
   const rarity = getRandomRarity();
+  const client = getClient();
 
   // 如果没有配置 API Key，使用预设祝福语
   if (!client) {

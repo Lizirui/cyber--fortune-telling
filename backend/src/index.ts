@@ -1,11 +1,17 @@
+import dotenv from 'dotenv';
+import { fileURLToPath } from 'url';
+import { dirname, join } from 'path';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+
+dotenv.config({ path: join(__dirname, '..', '.env') });
+
 import express from 'express';
 import cors from 'cors';
-import dotenv from 'dotenv';
 import mintRoutes from './routes/mint.js';
 import nftRoutes from './routes/nft.js';
 import leaderboardRoutes from './routes/leaderboard.js';
-
-dotenv.config();
 
 const app = express();
 const port = process.env.PORT || 3001;

@@ -22,6 +22,11 @@ contract CyberFortuneNFT is ERC721, ERC721URIStorage, ERC2981, Ownable, Reentran
     /// @dev 下一个可用的 Token ID
     uint256 private _nextTokenId;
 
+    /// @dev 获取下一个可用的 Token ID
+    function nextTokenId() external view returns (uint256) {
+        return _nextTokenId;
+    }
+
     /// @dev 最大供应量
     uint256 public constant MAX_SUPPLY = 10000;
 

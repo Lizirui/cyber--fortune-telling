@@ -1,43 +1,37 @@
 import { ethers } from 'ethers';
 
-const PRIVATE_KEY = process.env.SIGNER_PRIVATE_KEY;
-
-if (!PRIVATE_KEY) {
-  throw new Error('SIGNER_PRIVATE_KEY not configured');
-}
-
-const signer = new ethers.Wallet(PRIVATE_KEY);
-
-export interface SignatureData {
-  blessing: string;
-  rarity: number;
-  expiresAt: number;
-  nonce: number;
-  userAddress: string;
+function getSigner() {
+  const PRIVATE_KEY = process.env.SIGNER_PRIVATE_KEY;
+  if (!PRIVATE_KEY) {
+    throw new Error('SIGNER_PRIVATE_KEY not configured');
+  }
+  return new ethers.Wallet(PRIVATE_KEY);
 }
 
 export async function generateSignature(
   blessing: string,
   rarity: number,
   expiresAt: number,
-  nonce: number,
+  tokenId: number,
   userAddress: string
 ): Promise<string> {
+  const signer = getSigner();
+
+  // 计算与合约相同的哈希
   const hash = ethers.keccak256(
     ethers.solidityPacked(
       ['string', 'uint8', 'uint256', 'uint256', 'address'],
-      [blessing, rarity, expiresAt, nonce, userAddress]
+      [blessing, rarity, expiresAt, tokenId, userAddress]
     )
   );
 
-  //以太坊签名格式：添加 "\x19Ethereum Signed Message:\n32" 前缀
-  const ethMessage = '\x19Ethereum Signed Message:\n32' + hash.slice(2);
-  const ethHash = ethers.keccak256(ethers.toUtf8Bytes(ethMessage));
-  const signature = await signer.signMessage(ethers.getBytes(ethHash));
+  // 使用 ethers.js 的 signMessage 会自动添加 Ethereum Signed Message 前缀
+  // 这与合约中的 toEthSignedMessageHash() 和 ECDSA.recover() 匹配
+  const signature = await signer.signMessage(ethers.getBytes(hash));
 
   return signature;
 }
 
 export function getSignerAddress(): string {
-  return signer.address;
+  return getSigner().address;
 }

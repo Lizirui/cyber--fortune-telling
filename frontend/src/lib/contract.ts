@@ -1,21 +1,79 @@
 export const NFT_ABI = [
-  // ERC721
-  "function name() view returns (string)",
-  "function symbol() view returns (string)",
-  "function balanceOf(address owner) view returns (uint256)",
-  "function ownerOf(uint256 tokenId) view returns (address)",
-  "function tokenURI(uint256 tokenId) view returns (string)",
-  // Mint
-  "function mint(string blessing, uint8 rarity, uint256 expiresAt, uint256 nonce, bytes signature) payable",
-  // Marketplace
-  "function listItem(uint256 tokenId, uint256 price) payable",
-  "function buyItem(uint256 tokenId) payable",
-  "function cancelListing(uint256 tokenId)",
-  "function getListing(uint256 tokenId) view returns (address seller, uint256 price, bool isListed)",
-  // Views
-  "function totalSupply() view returns (uint256)",
-  "function getBlessing(uint256 tokenId) view returns (string)",
-  "function getRarity(uint256 tokenId) view returns (uint8)",
+  {
+    type: "function",
+    name: "name",
+    inputs: [],
+    outputs: [{ name: "", type: "string", internalType: "string" }],
+    stateMutability: "view",
+  },
+  {
+    type: "function",
+    name: "symbol",
+    inputs: [],
+    outputs: [{ name: "", type: "string", internalType: "string" }],
+    stateMutability: "view",
+  },
+  {
+    type: "function",
+    name: "balanceOf",
+    inputs: [{ name: "owner", type: "address", internalType: "address" }],
+    outputs: [{ name: "", type: "uint256", internalType: "uint256" }],
+    stateMutability: "view",
+  },
+  {
+    type: "function",
+    name: "ownerOf",
+    inputs: [{ name: "tokenId", type: "uint256", internalType: "uint256" }],
+    outputs: [{ name: "", type: "address", internalType: "address" }],
+    stateMutability: "view",
+  },
+  {
+    type: "function",
+    name: "tokenURI",
+    inputs: [{ name: "tokenId", type: "uint256", internalType: "uint256" }],
+    outputs: [{ name: "", type: "string", internalType: "string" }],
+    stateMutability: "view",
+  },
+  {
+    type: "function",
+    name: "mintWithSignature",
+    inputs: [
+      { name: "blessing", type: "string", internalType: "string" },
+      { name: "rarity", type: "uint8", internalType: "uint8" },
+      { name: "expiresAt", type: "uint256", internalType: "uint256" },
+      { name: "signature", type: "bytes", internalType: "bytes" },
+    ],
+    outputs: [],
+    stateMutability: "payable",
+  },
+  {
+    type: "function",
+    name: "nextTokenId",
+    inputs: [],
+    outputs: [{ name: "", type: "uint256", internalType: "uint256" }],
+    stateMutability: "view",
+  },
+  {
+    type: "function",
+    name: "totalSupply",
+    inputs: [],
+    outputs: [{ name: "", type: "uint256", internalType: "uint256" }],
+    stateMutability: "view",
+  },
+  {
+    type: "function",
+    name: "getBlessing",
+    inputs: [{ name: "tokenId", type: "uint256", internalType: "uint256" }],
+    outputs: [{ name: "", type: "string", internalType: "string" }],
+    stateMutability: "view",
+  },
+  {
+    type: "function",
+    name: "getRarity",
+    inputs: [{ name: "tokenId", type: "uint256", internalType: "uint256" }],
+    outputs: [{ name: "", type: "uint8", internalType: "uint8" }],
+    stateMutability: "view",
+  },
 ] as const;
 
 export const NFT_ABI_MARKETPLACE = [
