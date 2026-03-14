@@ -73,11 +73,26 @@ foundryup
 
 #### 1. 智能合约 (.env)
 
-创建 `contracts/.env`:
+项目已提供环境变量模板文件:
+
+```bash
+cd contracts
+
+# Sepolia 测试网部署 (推荐开发测试使用)
+cp .env.sepolia .env
+
+# 主网部署
+cp .env.mainnet .env
+```
+
+编辑 `.env` 填入以下内容:
 
 ```bash
 # Base Sepolia 测试网 RPC
 BASE_SEPOLIA_RPC_URL=https://sepolia.base.org
+
+# Base 主网 RPC
+BASE_RPC_URL=https://mainnet.base.org
 
 # 部署钱包私钥 (不要提交到 Git!)
 PRIVATE_KEY=0x_your_private_key_without_0x_prefix
@@ -85,7 +100,7 @@ PRIVATE_KEY=0x_your_private_key_without_0x_prefix
 # 授权签名者地址 (用于验证后端签名)
 AUTHORIZED_SIGNER=0x_your_wallet_address
 
-# BaseScan API Key (验证合约用，可选)
+# BaseScan API Key (验证合约用)
 BASESCAN_API_KEY=your_basescan_api_key
 ```
 
@@ -148,17 +163,24 @@ cd backend && pnpm dev     # 后端: http://localhost:3001
 ```bash
 cd contracts
 
-# 编译合约
+# 1. 复制 Sepolia 配置
+cp .env.sepolia .env
+
+# 2. 编辑 .env 填入 PRIVATE_KEY 和 BASESCAN_API_KEY
+
+# 3. 编译合约
 forge build
 
-# 部署到 Base Sepolia
-forge script script/Deploy.s.sol:DeployScript --rpc-url base-sepolia --broadcast
+# 4. 部署到 Base Sepolia
+forge script script/Deploy.s.sol:DeployScript --rpc-url base_sepolia --broadcast --private-key $PRIVATE_KEY
 
-# 验证合约 (可选)
+# 5. 验证合约 (可选)
 forge verify-contract <CONTRACT_ADDRESS> src/CyberFortuneNFT.sol:CyberFortuneNFT --chain base-sepolia --etherscan-api-key $BASESCAN_API_KEY
 ```
 
 部署成功后会输出合约地址，保存下来用于后续配置。
+
+> **提示**: 如果想使用 forge 加载私钥，也可以直接使用 `source .env && forge script ...`
 
 ### 步骤 3: 配置后端
 
@@ -225,9 +247,21 @@ curl -X POST http://localhost:3001/api/generate \
 
 ### 步骤 1: 准备主网配置
 
-创建 `contracts/.env.mainnet`:
+项目已提供环境变量模板:
 
 ```bash
+cd contracts
+
+# 复制主网配置模板
+cp .env.mainnet .env
+```
+
+编辑 `.env` 填入以下内容:
+
+```bash
+# Base Sepolia RPC (备用)
+BASE_SEPOLIA_RPC_URL=https://sepolia.base.org
+
 # Base 主网 RPC
 BASE_RPC_URL=https://mainnet.base.org
 
@@ -263,10 +297,14 @@ NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID=your_walletconnect_project_id
 
 ```bash
 cd contracts
-source .env.mainnet
 
-# 部署到 Base 主网
-forge script script/Deploy.s.sol:DeployScript --rpc-url base --broadcast --verify
+# 1. 复制主网配置
+cp .env.mainnet .env
+
+# 2. 编辑 .env 填入 PRIVATE_KEY 和 BASESCAN_API_KEY
+
+# 3. 部署到 Base 主网
+forge script script/Deploy.s.sol:DeployScript --rpc-url base --broadcast --private-key $PRIVATE_KEY --verify
 
 # 验证通过后输出合约地址
 ```
