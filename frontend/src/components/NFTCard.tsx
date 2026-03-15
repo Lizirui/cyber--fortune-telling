@@ -4,18 +4,25 @@ import { RarityBadge } from './RarityBadge';
 
 type Rarity = 0 | 1 | 2 | 3 | 4 | 5;
 
-const RARITY_STYLES: Record<Rarity, {
-  gradient: string;
+const RARITY_CONFIG: Record<Rarity, {
+  gradientFrom: string;
+  gradientTo: string;
   textColor: string;
-  shadow: string;
-  glow: string;
+  borderColor: string;
+  bgOpacity: string;
 }> = {
-  0: { gradient: 'from-gray-700/30 to-gray-800/30', textColor: 'text-gray-300', shadow: 'shadow-gray-500/20', glow: 'shadow-gray-500/10' },
-  1: { gradient: 'from-green-900/30 to-green-800/30', textColor: 'text-green-400', shadow: 'shadow-green-500/20', glow: 'shadow-green-500/10' },
-  2: { gradient: 'from-blue-900/30 to-blue-800/30', textColor: 'text-blue-400', shadow: 'shadow-blue-500/20', glow: 'shadow-blue-500/10' },
-  3: { gradient: 'from-purple-900/30 to-pink-800/30', textColor: 'text-purple-400', shadow: 'shadow-purple-500/20', glow: 'shadow-purple-500/10' },
-  4: { gradient: 'from-orange-900/30 to-red-800/30', textColor: 'text-orange-400', shadow: 'shadow-orange-500/20', glow: 'shadow-orange-500/10' },
-  5: { gradient: 'from-yellow-900/30 to-amber-800/30', textColor: 'text-yellow-400', shadow: 'shadow-yellow-500/20', glow: 'shadow-yellow-500/10' },
+  // N (普通) - 灰色
+  0: { gradientFrom: 'from-gray-700/40', gradientTo: 'to-gray-800/40', textColor: '#888888', borderColor: '#888888', bgOpacity: '20' },
+  // R (稀有) - 绿色
+  1: { gradientFrom: 'from-green-900/40', gradientTo: 'to-green-800/40', textColor: '#00ff00', borderColor: '#00ff00', bgOpacity: '20' },
+  // SR (超稀有) - 蓝色
+  2: { gradientFrom: 'from-blue-900/40', gradientTo: 'to-blue-800/40', textColor: '#00aaff', borderColor: '#00aaff', bgOpacity: '20' },
+  // SSR (超超稀有) - 紫色
+  3: { gradientFrom: 'from-purple-900/40', gradientTo: 'to-pink-800/40', textColor: '#ff00ff', borderColor: '#ff00ff', bgOpacity: '20' },
+  // SP (特殊) - 橙色
+  4: { gradientFrom: 'from-orange-900/40', gradientTo: 'to-red-800/40', textColor: '#ff8800', borderColor: '#ff8800', bgOpacity: '20' },
+  // UR (传说) - 金色
+  5: { gradientFrom: 'from-yellow-900/40', gradientTo: 'to-amber-800/40', textColor: '#ffd700', borderColor: '#ffd700', bgOpacity: '20' },
 };
 
 interface NFTCardProps {
@@ -39,7 +46,7 @@ export function NFTCard({
   onBuy,
   onList,
 }: NFTCardProps) {
-  const rarityStyle = RARITY_STYLES[rarity];
+  const rarityConfig = RARITY_CONFIG[rarity];
 
   return (
     <div className="glass-cyber rounded-xl overflow-hidden hover:scale-[1.02] transition-all cursor-pointer group">
@@ -49,8 +56,18 @@ export function NFTCard({
         <div className="absolute inset-0 bg-gradient-to-br from-cyber-primary/5 to-cyber-secondary/5 opacity-0 group-hover:opacity-100 transition-opacity" />
 
         {/* 祝福语显示区域 */}
-        <div className={`absolute inset-2 rounded-lg bg-gradient-to-br ${rarityStyle.gradient} flex items-center justify-center p-3 border border-white/5 ${rarityStyle.glow} shadow-lg`}>
-          <p className={`text-sm md:text-base font-bold ${rarityStyle.textColor} text-center leading-relaxed break-words max-w-full`}>
+        <div
+          className="absolute inset-2 rounded-lg bg-gradient-to-br flex items-center justify-center p-3 border shadow-lg"
+          style={{
+            backgroundImage: `linear-gradient(to bottom right, ${rarityConfig.textColor}${rarityConfig.bgOpacity}, ${rarityConfig.borderColor}10)`,
+            borderColor: `${rarityConfig.borderColor}40`,
+            boxShadow: `0 0 20px ${rarityConfig.textColor}20`,
+          }}
+        >
+          <p
+            className="text-sm md:text-base font-bold text-center leading-relaxed break-words max-w-full"
+            style={{ color: rarityConfig.textColor }}
+          >
             {blessing}
           </p>
         </div>
