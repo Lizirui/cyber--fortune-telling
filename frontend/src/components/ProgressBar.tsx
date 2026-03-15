@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, Suspense } from 'react';
+import { useEffect, Suspense, useRef } from 'react';
 import { usePathname, useSearchParams } from 'next/navigation';
 import NProgress from 'nprogress';
 import 'nprogress/nprogress.css';
@@ -8,18 +8,27 @@ import 'nprogress/nprogress.css';
 function ProgressBarContent() {
   const pathname = usePathname();
   const searchParams = useSearchParams();
+  const isFirstMount = useRef(true);
 
   useEffect(() => {
-    NProgress.configure({ showSpinner: false });
+    NProgress.configure({ showSpinner: false, minimum: 0.1, speed: 0.5 });
 
-    const handleRouteChange = () => {
-      NProgress.done();
-    };
+    // 首次挂载不触发，避免页面加载时就显示进度条
+    if (isFirstMount.current) {
+      isFirstMount.current = false;
+      return;
+    }
 
+    // 路由变化时显示进度条
     NProgress.start();
 
+    // 短暂延迟后自动完成，避免闪烁
+    const timer = setTimeout(() => {
+      NProgress.done();
+    }, 200);
+
     return () => {
-      handleRouteChange();
+      clearTimeout(timer);
     };
   }, [pathname, searchParams]);
 
