@@ -22,6 +22,8 @@ type Rarity = 0 | 1 | 2 | 3 | 4 | 5;
 interface MintSignature {
   tokenId: number;
   signature: string;
+  blessing: string;
+  rarity: number;
 }
 
 interface RevealData {
@@ -142,18 +144,20 @@ export function MintBox() {
         throw new Error(data.error || "生成签名失败");
       }
 
-      // 2. 保存签名数据
+      // 2. 保存签名数据和祝福语
       setSignatureData({
         tokenId: data.tokenId,
         signature: data.signature,
+        blessing: data.blessing,
+        rarity: data.rarity,
       });
 
-      // 3. 立即调用合约（不显示 blessing）
-      // 注意：签名只验证 tokenId + userAddress，不验证 blessing/rarity
-      // 合约会存储我们传入的 blessing/rarity
+      // 3. 调用合约，使用后端返回的真实祝福语
       console.log("Starting mint with params:", {
         address: CONTRACT_ADDRESS,
         tokenId: data.tokenId,
+        blessing: data.blessing,
+        rarity: data.rarity,
         signature: data.signature,
         value: MINT_FEE,
         chain: CHAIN,
@@ -164,8 +168,8 @@ export function MintBox() {
         abi: NFT_ABI,
         functionName: "mintWithSignature",
         args: [
-          " ", // blessing - 使用单个空格减少 Gas 消耗
-          0, // rarity - 稍后从 reveal 获取
+          data.blessing, // 使用后端返回的真实祝福语
+          data.rarity,   // 使用后端返回的真实稀有度
           BigInt(0), // expiresAt - 保留参数
           data.signature as `0x${string}`,
         ],

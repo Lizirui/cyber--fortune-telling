@@ -36,10 +36,12 @@ router.post('/generate', async (req, res) => {
       userAddress
     );
 
-    // 不返回 blessing 和 rarity！
+    // 返回 blessing 和 rarity，让前端传给合约
     res.json({
       expiresAt: 0, // 保留字段但不使用
       tokenId,
+      blessing,
+      rarity,
       signature,
       signerAddress: getSignerAddress()
     });
