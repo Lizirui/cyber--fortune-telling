@@ -54,11 +54,18 @@ export default function ProfilePage() {
   }, [address]);
 
   useEffect(() => {
-    if (address && balance && Number(balance) > 0) {
-      fetchUserNFTs();
-    } else if (address && balance && Number(balance) === 0) {
-      setNfts([]);
+    if (!address) {
       setLoading(false);
+      return;
+    }
+
+    if (balance !== undefined) {
+      if (Number(balance) > 0) {
+        fetchUserNFTs();
+      } else {
+        setNfts([]);
+        setLoading(false);
+      }
     }
   }, [address, balance, fetchUserNFTs, refetchTrigger]);
 
