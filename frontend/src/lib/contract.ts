@@ -74,6 +74,48 @@ export const NFT_ABI = [
     outputs: [{ name: "", type: "uint8", internalType: "uint8" }],
     stateMutability: "view",
   },
+  {
+    type: "function",
+    name: "listItem",
+    inputs: [
+      { name: "tokenId", type: "uint256", internalType: "uint256" },
+      { name: "price", type: "uint256", internalType: "uint256" },
+    ],
+    outputs: [],
+    stateMutability: "nonpayable",
+  },
+  {
+    type: "function",
+    name: "buyItem",
+    inputs: [{ name: "tokenId", type: "uint256", internalType: "uint256" }],
+    outputs: [],
+    stateMutability: "payable",
+  },
+  {
+    type: "function",
+    name: "cancelListing",
+    inputs: [{ name: "tokenId", type: "uint256", internalType: "uint256" }],
+    outputs: [],
+    stateMutability: "nonpayable",
+  },
+  {
+    type: "function",
+    name: "getListing",
+    inputs: [{ name: "tokenId", type: "uint256", internalType: "uint256" }],
+    outputs: [
+      { name: "seller", type: "address", internalType: "address" },
+      { name: "price", type: "uint256", internalType: "uint256" },
+      { name: "isListed", type: "bool", internalType: "bool" },
+    ],
+    stateMutability: "view",
+  },
+  {
+    type: "function",
+    name: "tokensOfOwner",
+    inputs: [{ name: "owner", type: "address", internalType: "address" }],
+    outputs: [{ name: "", type: "uint256[]", internalType: "uint256[]" }],
+    stateMutability: "view",
+  },
 ] as const;
 
 export const NFT_ABI_MARKETPLACE = [

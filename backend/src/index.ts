@@ -11,7 +11,7 @@ import express from 'express';
 import cors from 'cors';
 import mintRoutes from './routes/mint.js';
 import nftRoutes from './routes/nft.js';
-import leaderboardRoutes from './routes/leaderboard.js';
+import marketRoutes from './routes/market.js';
 
 const app = express();
 const port = process.env.PORT || 3001;
@@ -24,7 +24,7 @@ app.use(express.json());
 // 路由
 app.use('/api/mint', mintRoutes);
 app.use('/api/nft', nftRoutes);
-app.use('/api/leaderboard', leaderboardRoutes);
+app.use('/api/market', marketRoutes);
 
 // 健康检查
 app.get('/health', (req, res) => {

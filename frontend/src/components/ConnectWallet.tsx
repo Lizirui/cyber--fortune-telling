@@ -1,7 +1,7 @@
-'use client';
+"use client";
 
-import { useAccount, useDisconnect as useWagmiDisconnect } from 'wagmi';
-import { useConnectModal } from '@rainbow-me/rainbowkit';
+import { useAccount, useDisconnect as useWagmiDisconnect } from "wagmi";
+import { useConnectModal } from "@rainbow-me/rainbowkit";
 
 export function ConnectWallet() {
   const { address, isConnected } = useAccount();
@@ -10,13 +10,15 @@ export function ConnectWallet() {
 
   if (isConnected && address) {
     return (
-      <div className="flex items-center gap-4">
-        <span className="text-cyber-primary font-mono">
-          {address.slice(0, 6)}...{address.slice(-4)}
-        </span>
+      <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+        <div className="flex items-center justify-center gap-2 px-4 py-3 bg-cyber-primary/10 border border-cyber-primary/30 rounded-xl">
+          <span className="text-cyber-primary font-mono text-sm">
+            {address.slice(0, 6)}...{address.slice(-4)}
+          </span>
+        </div>
         <button
           onClick={() => disconnect()}
-          className="px-4 py-2 border border-cyber-secondary text-cyber-secondary rounded hover:bg-cyber-secondary hover:text-black transition-all"
+          className="px-4 py-3 border border-cyber-danger/50 text-cyber-danger rounded-xl hover:bg-cyber-danger hover:text-black transition-all text-sm font-bold cursor-pointer w-full sm:w-auto"
         >
           断开
         </button>
@@ -25,10 +27,7 @@ export function ConnectWallet() {
   }
 
   return (
-    <button
-      onClick={openConnectModal}
-      className="px-6 py-2 bg-cyber-primary text-black font-bold rounded neon-border hover:bg-white transition-all"
-    >
+    <button onClick={openConnectModal} className="cyber-btn text-sm w-full md:w-auto">
       连接钱包
     </button>
   );

@@ -11,17 +11,16 @@ function getSigner() {
 export async function generateSignature(
   blessing: string,
   rarity: number,
-  expiresAt: number,
   tokenId: number,
   userAddress: string
 ): Promise<string> {
   const signer = getSigner();
 
-  // 计算与合约相同的哈希
+  // 构建签名哈希（只包含 tokenId 和 userAddress，与合约匹配）
   const hash = ethers.keccak256(
     ethers.solidityPacked(
-      ['string', 'uint8', 'uint256', 'uint256', 'address'],
-      [blessing, rarity, expiresAt, tokenId, userAddress]
+      ['uint256', 'address'],
+      [tokenId, userAddress]
     )
   );
 

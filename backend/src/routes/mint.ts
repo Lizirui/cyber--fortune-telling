@@ -5,7 +5,12 @@ import { getNextTokenId } from '../utils/contract.js';
 
 const router = Router();
 
-// 生成祝福语和签名
+// 内存存储：tokenId -> { blessing, rarity }
+// 注意：这是进程内存存储，重启服务后会丢失
+// 生产环境应该使用 Redis 或数据库
+const blessingStore = new Map<number, { blessing: string; rarity: number }>();
+
+// 生成祝福语和签名（不返回 blessing）
 router.post('/generate', async (req, res) => {
   try {
     const { userAddress } = req.body;
@@ -20,22 +25,20 @@ router.post('/generate', async (req, res) => {
     // 从合约获取下一个 tokenId
     const tokenId = await getNextTokenId();
 
-    // 设置过期时间（10分钟）
-    const expiresAt = Math.floor(Date.now() / 1000) + 600;
+    // 存储祝福语（用于后续 reveal）
+    blessingStore.set(tokenId, { blessing, rarity });
 
-    // 生成签名
+    // 生成签名（立即使用，不过期）
     const signature = await generateSignature(
       blessing,
       rarity,
-      expiresAt,
       tokenId,
       userAddress
     );
 
+    // 不返回 blessing 和 rarity！
     res.json({
-      blessing,
-      rarity,
-      expiresAt,
+      expiresAt: 0, // 保留字段但不使用
       tokenId,
       signature,
       signerAddress: getSignerAddress()
@@ -43,6 +46,33 @@ router.post('/generate', async (req, res) => {
   } catch (error) {
     console.error('Generate error:', error);
     res.status(500).json({ error: 'Failed to generate blessing' });
+  }
+});
+
+// 根据 tokenId 查询祝福语（用于 Mint 成功后揭示）
+router.get('/reveal/:tokenId', async (req, res) => {
+  try {
+    const { tokenId } = req.params;
+    const parsedTokenId = parseInt(tokenId, 10);
+
+    if (isNaN(parsedTokenId)) {
+      return res.status(400).json({ error: 'Invalid tokenId' });
+    }
+
+    const data = blessingStore.get(parsedTokenId);
+
+    if (!data) {
+      return res.status(404).json({ error: 'Blessing not found' });
+    }
+
+    res.json({
+      tokenId: parsedTokenId,
+      blessing: data.blessing,
+      rarity: data.rarity
+    });
+  } catch (error) {
+    console.error('Reveal error:', error);
+    res.status(500).json({ error: 'Failed to reveal blessing' });
   }
 });
 

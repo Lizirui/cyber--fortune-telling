@@ -2,9 +2,12 @@
 
 @theme {
   --color-cyber-bg: #0a0a0f;
+  --color-cyber-bg-light: #12121a;
   --color-cyber-primary: #00fff5;
   --color-cyber-secondary: #ff00ff;
   --color-cyber-accent: #ffff00;
+  --color-cyber-danger: #ff3366;
+  --color-cyber-success: #00ff88;
 
   --color-rarity-n: #888888;
   --color-rarity-r: #00ff00;
@@ -15,6 +18,9 @@
 
   --animate-glow: glow 2s ease-in-out infinite alternate;
   --animate-spin-slow: spin 3s linear infinite;
+  --animate-pulse-glow: pulse-glow 2s ease-in-out infinite;
+  --animate-scan: scan 3s linear infinite;
+  --animate-flicker: flicker 0.15s infinite;
 }
 
 @keyframes glow {
@@ -22,17 +28,115 @@
   100% { box-shadow: 0 0 20px #00fff5, 0 0 30px #00fff5; }
 }
 
+@keyframes pulse-glow {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.7; }
+}
+
+@keyframes scan {
+  0% { transform: translateY(-100%); }
+  100% { transform: translateY(100%); }
+}
+
+@keyframes flicker {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.8; }
+}
+
 :root {
   --cyber-bg: #0a0a0f;
+  --cyber-bg-light: #12121a;
   --cyber-primary: #00fff5;
   --cyber-secondary: #ff00ff;
   --cyber-accent: #ffff00;
+  --cyber-danger: #ff3366;
+  --cyber-success: #00ff88;
 }
 
 body {
   background-color: var(--cyber-bg);
   color: #ffffff;
   font-family: ui-monospace, monospace;
+  overflow-x: hidden;
+}
+
+/* 动态网格背景 */
+.cyber-grid-bg {
+  background-image:
+    linear-gradient(rgba(0, 255, 245, 0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0, 255, 245, 0.03) 1px, transparent 1px);
+  background-size: 50px 50px;
+}
+
+/* 径向渐变光晕 */
+.cyber-radial-glow {
+  background: radial-gradient(ellipse at 50% 0%, rgba(0, 255, 245, 0.15) 0%, transparent 60%);
+}
+
+/* 赛博朋克按钮 */
+.cyber-btn {
+  position: relative;
+  padding: 12px 32px;
+  font-weight: bold;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  background: linear-gradient(135deg, rgba(0, 255, 245, 0.1) 0%, rgba(0, 255, 245, 0.05) 100%);
+  border: 1px solid var(--cyber-primary);
+  color: var(--cyber-primary);
+  border-radius: 0.75rem;
+  overflow: hidden;
+  transition: all 0.3s ease;
+	cursor: pointer;
+}
+
+.cyber-btn::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(0, 255, 245, 0.3), transparent);
+  transition: left 0.5s ease;
+}
+
+.cyber-btn:hover::before {
+  left: 100%;
+}
+
+.cyber-btn:hover {
+  background: var(--cyber-primary);
+  color: #000;
+  box-shadow: 0 0 20px var(--cyber-primary), 0 0 40px rgba(0, 255, 245, 0.3);
+}
+
+.cyber-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.cyber-btn:disabled:hover {
+  background: linear-gradient(135deg, rgba(0, 255, 245, 0.1) 0%, rgba(0, 255, 245, 0.05) 100%);
+  color: var(--cyber-primary);
+  box-shadow: none;
+}
+
+/* 赛博朋克按钮 - 紫色版本 */
+.cyber-btn-secondary {
+  border-color: var(--cyber-secondary);
+  color: var(--cyber-secondary);
+  background: linear-gradient(135deg, rgba(255, 0, 255, 0.1) 0%, rgba(255, 0, 255, 0.05) 100%);
+	cursor: pointer;
+}
+
+.cyber-btn-secondary::before {
+  background: linear-gradient(90deg, transparent, rgba(255, 0, 255, 0.3), transparent);
+}
+
+.cyber-btn-secondary:hover {
+  background: var(--cyber-secondary);
+  color: #000;
+  box-shadow: 0 0 20px var(--cyber-secondary), 0 0 40px rgba(255, 0, 255, 0.3);
 }
 
 /* 霓虹边框 */
@@ -41,9 +145,79 @@ body {
   box-shadow: 0 0 5px var(--cyber-primary), inset 0 0 5px var(--cyber-primary);
 }
 
+/* 霓虹边框 - 动态版本 */
+.neon-border-animated {
+  border: 1px solid var(--cyber-primary);
+  box-shadow: 0 0 5px var(--cyber-primary), inset 0 0 5px var(--cyber-primary);
+  animation: pulse-glow 2s ease-in-out infinite;
+}
+
 /* 玻璃拟态 */
 .glass {
-  background: rgba(255, 255, 255, 0.05);
+  background: rgba(255, 255, 255, 0.03);
   backdrop-filter: blur(10px);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(0, 255, 245, 0.1);
+}
+
+/* 玻璃拟态增强版 */
+.glass-cyber {
+  background: linear-gradient(135deg, rgba(0, 255, 245, 0.05) 0%, rgba(255, 0, 255, 0.02) 100%);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(0, 255, 245, 0.15);
+  box-shadow: 0 0 30px rgba(0, 0, 0, 0.5), inset 0 0 30px rgba(0, 255, 245, 0.02);
+}
+
+/* 扫描线效果 */
+.scanline::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(transparent 50%, rgba(0, 0, 0, 0.1) 50%);
+  background-size: 100% 4px;
+  pointer-events: none;
+  opacity: 0.3;
+}
+
+/* 文字发光效果 */
+.text-glow {
+  text-shadow: 0 0 10px currentColor, 0 0 20px currentColor;
+}
+
+/* 渐变文字 */
+.gradient-text {
+  background: linear-gradient(135deg, var(--cyber-primary) 0%, var(--cyber-secondary) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* 角落装饰 */
+.corner-decoration {
+  position: relative;
+}
+
+.corner-decoration::before,
+.corner-decoration::after {
+  content: '';
+  position: absolute;
+  width: 20px;
+  height: 20px;
+  border: 2px solid var(--cyber-primary);
+}
+
+.corner-decoration::before {
+  top: -1px;
+  left: -1px;
+  border-right: none;
+  border-bottom: none;
+}
+
+.corner-decoration::after {
+  bottom: -1px;
+  right: -1px;
+  border-left: none;
+  border-top: none;
 }

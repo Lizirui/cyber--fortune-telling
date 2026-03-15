@@ -31,7 +31,7 @@ contract CyberFortuneNFT is ERC721, ERC721URIStorage, ERC2981, Ownable, Reentran
     uint256 public constant MAX_SUPPLY = 10000;
 
     /// @dev Mint 费用 (0.01 ETH)
-    uint256 public constant MINT_FEE = 0.01 ether;
+    uint256 public constant MINT_FEE = 0.001 ether;
 
     /// @dev 每日最大 Mint 数量
     uint256 public constant MAX_DAILY_MINT = 10;
@@ -155,6 +155,26 @@ contract CyberFortuneNFT is ERC721, ERC721URIStorage, ERC2981, Ownable, Reentran
     }
 
     /**
+     * @dev 获取用户持有的所有 NFT Token ID
+     * @param owner 用户地址
+     * @return 持有的所有 Token ID 数组
+     */
+    function tokensOfOwner(address owner) external view returns (uint256[] memory) {
+        uint256 balance = balanceOf(owner);
+        uint256[] memory tokens = new uint256[](balance);
+        uint256 index = 0;
+
+        for (uint256 i = 0; i < _nextTokenId; i++) {
+            if (ownerOf(i) == owner) {
+                tokens[index] = i;
+                index++;
+            }
+        }
+
+        return tokens;
+    }
+
+    /**
      * @dev 提取创建者收入
      */
     function withdrawRevenue() external onlyOwner nonReentrant {
@@ -200,24 +220,22 @@ contract CyberFortuneNFT is ERC721, ERC721URIStorage, ERC2981, Ownable, Reentran
     }
 
     /**
-     * @dev 通过签名验证 Mint NFT
+     * @dev 通过签名验证 Mint NFT（先付钱后揭示祝福语）
      * @param blessing 祝福语文本
      * @param rarity 稀有度等级
-     * @param expiresAt 签名过期时间
-     * @param signature 签名数据
+     * @param expiresAt 签名过期时间（保留参数但忽略，使用 max uint256）
+     * @param signature 签名数据（只验证 tokenId + userAddress）
      */
     function mintWithSignature(
         string calldata blessing,
         uint8 rarity,
-        uint256 expiresAt,
+        uint256 expiresAt, // 保留参数但不再验证，使用 max uint256
         bytes calldata signature
     ) external payable nonReentrant {
         // 检查支付费用
         require(msg.value >= MINT_FEE, "Insufficient mint fee");
         // 检查未超过最大供应量
         require(_nextTokenId < MAX_SUPPLY, "Max supply reached");
-        // 检查签名是否过期
-        require(block.timestamp < expiresAt, "Signature expired");
         // 检查稀有度是否有效
         require(rarity <= 5, "Invalid rarity");
         // 检查每笔交易 Mint 数量限制
@@ -226,8 +244,9 @@ contract CyberFortuneNFT is ERC721, ERC721URIStorage, ERC2981, Ownable, Reentran
         // 增加当前交易计数
         txMintCount[msg.sender]++;
 
-        // 构建签名哈希
-        bytes32 hash = keccak256(abi.encodePacked(blessing, rarity, expiresAt, _nextTokenId, msg.sender));
+        // 构建签名哈希（只包含 tokenId 和 userAddress，不包含 blessing/rarity）
+        // 这样前端可以在不知道 blessing 的情况下调用合约
+        bytes32 hash = keccak256(abi.encodePacked(_nextTokenId, msg.sender));
         bytes32 ethSignedHash = hash.toEthSignedMessageHash();
 
         // 验证签名

@@ -20,12 +20,12 @@ export function NetworkButton() {
     return null;
   }
 
-  // 当前在 Base 或 Base Sepolia 网络，显示绿色圆点
+  // 当前在 Base 或 Base Sepolia 网络，显示网络状态徽章
   if (isOnBaseNetwork) {
     return (
-      <div className="flex items-center gap-2 px-3 py-1 text-sm text-green-400">
-        <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
-        {networkName}
+      <div className="flex items-center justify-center gap-2 px-4 py-3 text-sm text-cyber-success bg-cyber-success/10 border border-cyber-success/30 rounded-xl">
+        <span className="w-2 h-2 bg-cyber-success rounded-full animate-pulse" />
+        <span>{networkName}</span>
       </div>
     );
   }
@@ -34,9 +34,9 @@ export function NetworkButton() {
   return (
     <button
       onClick={() => switchChain?.({ chainId: CHAIN.id })}
-      className="px-3 py-1 text-sm bg-yellow-500/20 text-yellow-500 rounded border border-yellow-500 hover:bg-yellow-500/30 transition-colors"
+      className="cyber-btn w-full md:w-auto"
     >
-      Switch Base Sepolia
+      切换网络
     </button>
   );
 }
