@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import { Providers } from './providers';
+import ProgressBar from '@/components/ProgressBar';
 import './globals.css';
 
 export const metadata: Metadata = {
@@ -15,6 +16,7 @@ export default function RootLayout({
   return (
     <html lang="zh">
       <body>
+        <ProgressBar />
         <Providers>{children}</Providers>
       </body>
     </html>
