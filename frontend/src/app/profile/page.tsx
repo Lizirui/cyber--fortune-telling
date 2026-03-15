@@ -45,7 +45,7 @@ export default function ProfilePage() {
 
     setLoading(true);
     try {
-      const response = await fetch(`${BACKEND_URL}/api/market/user/${address}`);
+      const response = await fetch(`${BACKEND_URL}/api/nft/user/${address}`);
       const data = await response.json();
 
       if (data.nfts) {

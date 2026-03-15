@@ -1,8 +1,26 @@
 import { Router } from 'express';
-import { getNFTInfo } from '../utils/contract.js';
+import { getNFTInfo, getUserNFTs } from '../utils/contract.js';
 import { generateSVG, getRarityName } from '../services/svg.js';
 
 const router = Router();
+
+// 获取用户持有的 NFT 列表
+router.get('/user/:address', async (req, res) => {
+  try {
+    const { address } = req.params;
+
+    if (!address || !/^0x[a-fA-F0-9]{40}$/.test(address)) {
+      return res.status(400).json({ error: 'Invalid address' });
+    }
+
+    const nfts = await getUserNFTs(address);
+
+    res.json({ nfts });
+  } catch (error) {
+    console.error('User NFTs error:', error);
+    res.status(500).json({ error: 'Failed to get user NFTs' });
+  }
+});
 
 // 获取 NFT 详情
 router.get('/:tokenId', async (req, res) => {

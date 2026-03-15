@@ -1,5 +1,4 @@
 import { Header } from '@/components/Header';
-import { MarketGrid } from '@/components/MarketGrid';
 
 export default function MarketPage() {
   return (
@@ -18,7 +17,14 @@ export default function MarketPage() {
           <p className="text-gray-400 text-sm md:text-base">浏览并购买他人的赛博祝福</p>
         </div>
 
-        <MarketGrid />
+        {/* Coming Soon */}
+        <div className="flex items-center justify-center min-h-[50vh]">
+          <div className="text-center">
+            <div className="text-6xl md:text-8xl mb-4">🚧</div>
+            <h2 className="text-2xl md:text-3xl font-bold text-white mb-2">Coming Soon</h2>
+            <p className="text-gray-400">市场功能正在开发中，敬请期待</p>
+          </div>
+        </div>
       </main>
     </div>
   );
