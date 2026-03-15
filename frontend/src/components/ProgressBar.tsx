@@ -1,11 +1,11 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, Suspense } from 'react';
 import { usePathname, useSearchParams } from 'next/navigation';
 import NProgress from 'nprogress';
 import 'nprogress/nprogress.css';
 
-export default function ProgressBar() {
+function ProgressBarContent() {
   const pathname = usePathname();
   const searchParams = useSearchParams();
 
@@ -23,8 +23,13 @@ export default function ProgressBar() {
     };
   }, [pathname, searchParams]);
 
+  return null;
+}
+
+export default function ProgressBar() {
   return (
-    <>
+    <Suspense fallback={null}>
+      <ProgressBarContent />
       <style jsx global>{`
         #nprogress .bar {
           background: linear-gradient(90deg, #8b5cf6, #3b82f6, #06b6d4) !important;
@@ -38,6 +43,6 @@ export default function ProgressBar() {
           box-shadow: 0 0 10px #8b5cf6, 0 0 5px #8b5cf6 !important;
         }
       `}</style>
-    </>
+    </Suspense>
   );
 }
