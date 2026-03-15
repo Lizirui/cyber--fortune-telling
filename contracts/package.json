@@ -7,7 +7,7 @@
     "build": "forge build",
     "test": "forge test",
     "deploy": "forge script script/Deploy.s.sol --broadcast --verify",
-    "deploy:sepolia": "forge script script/Deploy.s.sol --broadcast --verify --network base-sepolia",
+    "deploy:sepolia": "forge script script/Deploy.s.sol --broadcast --verify -- --rpc-url https://sepolia.base.org",
     "deploy:mainnet": "forge script script/Deploy.s.sol --broadcast --verify --network base",
     "clean": "forge clean"
   },
