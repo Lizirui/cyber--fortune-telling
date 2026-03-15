@@ -1,13 +1,18 @@
-'use client';
+"use client";
 
-import { useAccount, useReadContract, useWriteContract, useWaitForTransactionReceipt } from 'wagmi';
-import { useEffect, useState, useCallback } from 'react';
-import { parseEther } from 'viem';
-import { Header } from '@/components/Header';
-import { NFTCard } from '@/components/NFTCard';
-import { ListModal } from '@/components/ListModal';
-import { NFT_ABI } from '@/lib/contract';
-import { CONTRACT_ADDRESS, BACKEND_URL } from '@/lib/constants';
+import {
+  useAccount,
+  useReadContract,
+  useWriteContract,
+  useWaitForTransactionReceipt,
+} from "wagmi";
+import { useEffect, useState, useCallback } from "react";
+import { parseEther } from "viem";
+import { Header } from "@/components/Header";
+import { NFTCard } from "@/components/NFTCard";
+import { ListModal } from "@/components/ListModal";
+import { NFT_ABI } from "@/lib/contract";
+import { CONTRACT_ADDRESS, BACKEND_URL } from "@/lib/constants";
 
 type Rarity = 0 | 1 | 2 | 3 | 4 | 5;
 
@@ -21,6 +26,17 @@ interface UserNFT {
   };
 }
 
+// Demo data for testing different rarity styles
+const DEMO_MODE = true;
+const DEMO_NFTS: UserNFT[] = [
+  { tokenId: 0, blessing: "代码无 bug，部署一次成功", rarity: 0 as Rarity },
+  { tokenId: 1, blessing: "Gas 永远够用", rarity: 1 as Rarity },
+  { tokenId: 2, blessing: "合约永不被黑，资产永远安全", rarity: 2 as Rarity },
+  { tokenId: 3, blessing: "你将获得神秘力量的加成", rarity: 3 as Rarity },
+  { tokenId: 4, blessing: "下一个百倍币已被你预订", rarity: 4 as Rarity },
+  { tokenId: 5, blessing: "你将成为 Web3 世界的传奇人物", rarity: 5 as Rarity },
+];
+
 export default function ProfilePage() {
   const { address, isConnected } = useAccount();
   const [nfts, setNfts] = useState<UserNFT[]>([]);
@@ -31,7 +47,7 @@ export default function ProfilePage() {
   const { data: balance } = useReadContract({
     address: CONTRACT_ADDRESS,
     abi: NFT_ABI,
-    functionName: 'balanceOf',
+    functionName: "balanceOf",
     args: address ? [address] : undefined,
   });
 
@@ -47,13 +63,20 @@ export default function ProfilePage() {
         setNfts(data.nfts);
       }
     } catch (error) {
-      console.error('Failed to fetch user NFTs:', error);
+      console.error("Failed to fetch user NFTs:", error);
     } finally {
       setLoading(false);
     }
   }, [address]);
 
   useEffect(() => {
+    // Demo mode: show demo data
+    if (DEMO_MODE) {
+      setNfts(DEMO_NFTS);
+      setLoading(false);
+      return;
+    }
+
     if (!address) {
       setLoading(false);
       return;
@@ -70,7 +93,7 @@ export default function ProfilePage() {
   }, [address, balance, fetchUserNFTs, refetchTrigger]);
 
   const handleListed = () => {
-    setRefetchTrigger(prev => prev + 1);
+    setRefetchTrigger((prev) => prev + 1);
     setSelectedNFT(null);
   };
 
@@ -100,20 +123,26 @@ export default function ProfilePage() {
       </div>
 
       <Header />
-      <main className="pt-16 md:pt-20 pb-8 md:pb-12 max-w-7xl mx-auto px-3 md:px-4 relative z-10">
+      <main className="pt-20 md:pt-20 pb-8 md:pb-12 max-w-7xl mx-auto px-3 md:px-4 relative z-10">
         {/* 用户信息卡片 */}
         <div className="glass-cyber rounded-xl p-6 md:p-8 mb-6 md:mb-10 relative overflow-hidden">
           <div className="absolute top-0 right-0 w-32 md:w-64 h-32 md:h-64 bg-cyber-primary/5 rounded-full blur-3xl" />
 
           <div className="relative flex flex-col md:flex-row md:items-center justify-between gap-4 md:gap-6">
             <div>
-              <h1 className="text-2xl md:text-3xl font-bold gradient-text mb-2 md:mb-3">我的收藏</h1>
-              <p className="text-gray-400 font-mono text-xs md:text-sm truncate max-w-[200px] md:max-w-none">{address}</p>
+              <h1 className="text-2xl md:text-3xl font-bold gradient-text mb-2 md:mb-3">
+                我的收藏
+              </h1>
+              <p className="text-gray-400 font-mono text-xs md:text-sm truncate max-w-[200px] md:max-w-none">
+                {address}
+              </p>
             </div>
 
             <div className="flex items-center gap-3 md:gap-4">
               <div className="px-4 md:px-6 py-2 md:py-3 bg-cyber-primary/10 border border-cyber-primary/30 rounded-xl text-center">
-                <p className="text-2xl md:text-3xl font-bold text-cyber-primary">{balance?.toString() || 0}</p>
+                <p className="text-2xl md:text-3xl font-bold text-cyber-primary">
+                  {DEMO_MODE ? "6" : (balance?.toString() || 0)}
+                </p>
                 <p className="text-gray-500 text-xs mt-1">持有 NFT</p>
               </div>
             </div>
@@ -133,12 +162,14 @@ export default function ProfilePage() {
             <div className="glass-cyber rounded-xl p-8 md:p-12 inline-block">
               <div className="text-5xl md:text-6xl mb-4 opacity-50">📦</div>
               <p className="text-gray-400 text-lg mb-2">暂无 NFT</p>
-              <p className="text-gray-500 text-sm">去首页Mint一个属于你的赛博祝福吧</p>
+              <p className="text-gray-500 text-sm">
+                去首页Mint一个属于你的赛博祝福吧
+              </p>
             </div>
           </div>
         ) : (
           <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 md:gap-6">
-            {nfts.map(nft => (
+            {nfts.map((nft) => (
               <NFTCard
                 key={nft.tokenId}
                 tokenId={nft.tokenId}
