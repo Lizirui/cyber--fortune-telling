@@ -94,12 +94,9 @@ export default function ProfilePage() {
 
           <div className="relative flex flex-col md:flex-row md:items-center justify-between gap-4 md:gap-6">
             <div>
-              <h1 className="text-2xl md:text-3xl font-bold gradient-text mb-2 md:mb-3">
+              <h1 className="text-2xl md:text-3xl font-bold gradient-text">
                 我的收藏
               </h1>
-              <p className="text-gray-400 font-mono text-xs md:text-sm truncate max-w-[200px] md:max-w-none">
-                {address}
-              </p>
             </div>
 
             <div className="flex items-center gap-3 md:gap-4">
