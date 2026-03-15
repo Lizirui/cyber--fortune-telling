@@ -26,17 +26,6 @@ interface UserNFT {
   };
 }
 
-// Demo data for testing different rarity styles
-const DEMO_MODE = true;
-const DEMO_NFTS: UserNFT[] = [
-  { tokenId: 0, blessing: "代码无 bug，部署一次成功", rarity: 0 as Rarity },
-  { tokenId: 1, blessing: "Gas 永远够用", rarity: 1 as Rarity },
-  { tokenId: 2, blessing: "合约永不被黑，资产永远安全", rarity: 2 as Rarity },
-  { tokenId: 3, blessing: "你将获得神秘力量的加成", rarity: 3 as Rarity },
-  { tokenId: 4, blessing: "下一个百倍币已被你预订", rarity: 4 as Rarity },
-  { tokenId: 5, blessing: "你将成为 Web3 世界的传奇人物", rarity: 5 as Rarity },
-];
-
 export default function ProfilePage() {
   const { address, isConnected } = useAccount();
   const [nfts, setNfts] = useState<UserNFT[]>([]);
@@ -70,13 +59,6 @@ export default function ProfilePage() {
   }, [address]);
 
   useEffect(() => {
-    // Demo mode: show demo data
-    if (DEMO_MODE) {
-      setNfts(DEMO_NFTS);
-      setLoading(false);
-      return;
-    }
-
     if (!address) {
       setLoading(false);
       return;
@@ -141,7 +123,7 @@ export default function ProfilePage() {
             <div className="flex items-center gap-3 md:gap-4">
               <div className="px-4 md:px-6 py-2 md:py-3 bg-cyber-primary/10 border border-cyber-primary/30 rounded-xl text-center">
                 <p className="text-2xl md:text-3xl font-bold text-cyber-primary">
-                  {DEMO_MODE ? "6" : (balance?.toString() || 0)}
+                  {balance?.toString() || 0}
                 </p>
                 <p className="text-gray-500 text-xs mt-1">持有 NFT</p>
               </div>

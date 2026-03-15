@@ -28,17 +28,6 @@ interface ListingsResponse {
 
 type SortOption = 'tokenId_asc' | 'tokenId_desc' | 'price_asc' | 'price_desc';
 
-// Demo data for testing different rarity styles
-const DEMO_MODE = true;
-const DEMO_LISTINGS: ListedNFT[] = [
-  { tokenId: 10, blessing: "代码无 bug，部署一次成功", rarity: 0 as Rarity, price: "0.001", seller: "0x1234567890123456789012345678901234567890" },
-  { tokenId: 11, blessing: "Gas 永远够用", rarity: 1 as Rarity, price: "0.002", seller: "0x1234567890123456789012345678901234567890" },
-  { tokenId: 12, blessing: "合约永不被黑，资产永远安全", rarity: 2 as Rarity, price: "0.005", seller: "0x1234567890123456789012345678901234567890" },
-  { tokenId: 13, blessing: "你将获得神秘力量的加成", rarity: 3 as Rarity, price: "0.01", seller: "0x1234567890123456789012345678901234567890" },
-  { tokenId: 14, blessing: "下一个百倍币已被你预订", rarity: 4 as Rarity, price: "0.05", seller: "0x1234567890123456789012345678901234567890" },
-  { tokenId: 15, blessing: "你将成为 Web3 世界的传奇人物", rarity: 5 as Rarity, price: "0.1", seller: "0x1234567890123456789012345678901234567890" },
-];
-
 export function MarketGrid() {
   const { isConnected } = useAccount();
   const [nfts, setNfts] = useState<ListedNFT[]>([]);
@@ -90,15 +79,6 @@ export function MarketGrid() {
   }, [page, filter, sort, search]);
 
   useEffect(() => {
-    // Demo mode: show demo data
-    if (DEMO_MODE) {
-      setNfts(DEMO_LISTINGS);
-      setTotal(DEMO_LISTINGS.length);
-      setTotalPages(1);
-      setLoading(false);
-      return;
-    }
-
     fetchListings();
   }, [fetchListings]);
 
