@@ -32,22 +32,12 @@ interface NFTCardProps {
   tokenId: number;
   blessing: string;
   rarity: Rarity;
-  price?: string;
-  seller?: string;
-  isListed?: boolean;
-  onBuy?: () => void;
-  onList?: () => void;
 }
 
 export function NFTCard({
   tokenId,
   blessing,
   rarity,
-  price,
-  seller,
-  isListed,
-  onBuy,
-  onList,
 }: NFTCardProps) {
   const rarityConfig = RARITY_CONFIG[rarity];
 
@@ -85,40 +75,10 @@ export function NFTCard({
       </div>
 
       <div className="p-3 md:p-5">
-        <div className="flex items-center justify-between mb-2 md:mb-3">
+        <div className="flex items-center justify-between">
           <span className="text-gray-500 font-mono text-xs md:text-sm">#{tokenId}</span>
           <RarityBadge rarity={rarity} />
         </div>
-
-        {price ? (
-          <div className="flex items-center justify-between">
-            <span className="text-cyber-primary font-bold text-sm">{price} ETH</span>
-            {isListed ? (
-              <button
-                onClick={onBuy}
-                className="px-3 md:px-4 py-1.5 bg-cyber-primary text-black text-xs md:text-sm rounded-lg font-bold hover:bg-white transition-all"
-              >
-                购买
-              </button>
-            ) : (
-              <button
-                onClick={onList}
-                className="px-3 md:px-4 py-1.5 border border-cyber-secondary text-cyber-secondary text-xs md:text-sm rounded-lg hover:bg-cyber-secondary hover:text-black transition-all"
-              >
-                上架
-              </button>
-            )}
-          </div>
-        ) : (
-          <div className="text-center pt-1 md:pt-2">
-            <button
-              onClick={onList}
-              className="px-3 md:px-4 py-2 border border-cyber-primary/50 text-cyber-primary text-xs md:text-sm rounded-lg hover:bg-cyber-primary hover:text-black transition-all w-full"
-            >
-              上架出售
-            </button>
-          </div>
-        )}
       </div>
     </div>
   );

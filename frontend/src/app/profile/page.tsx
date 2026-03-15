@@ -1,16 +1,9 @@
 "use client";
 
-import {
-  useAccount,
-  useReadContract,
-  useWriteContract,
-  useWaitForTransactionReceipt,
-} from "wagmi";
+import { useAccount, useReadContract } from "wagmi";
 import { useEffect, useState, useCallback } from "react";
-import { parseEther } from "viem";
 import { Header } from "@/components/Header";
 import { NFTCard } from "@/components/NFTCard";
-import { ListModal } from "@/components/ListModal";
 import { NFT_ABI } from "@/lib/contract";
 import { CONTRACT_ADDRESS, BACKEND_URL } from "@/lib/constants";
 
@@ -20,18 +13,12 @@ interface UserNFT {
   tokenId: number;
   blessing: string;
   rarity: Rarity;
-  listing?: {
-    price: string;
-    isListed: boolean;
-  };
 }
 
 export default function ProfilePage() {
   const { address, isConnected } = useAccount();
   const [nfts, setNfts] = useState<UserNFT[]>([]);
   const [loading, setLoading] = useState(true);
-  const [selectedNFT, setSelectedNFT] = useState<UserNFT | null>(null);
-  const [refetchTrigger, setRefetchTrigger] = useState(0);
 
   const { data: balance } = useReadContract({
     address: CONTRACT_ADDRESS,
@@ -72,12 +59,7 @@ export default function ProfilePage() {
         setLoading(false);
       }
     }
-  }, [address, balance, fetchUserNFTs, refetchTrigger]);
-
-  const handleListed = () => {
-    setRefetchTrigger((prev) => prev + 1);
-    setSelectedNFT(null);
-  };
+  }, [address, balance, fetchUserNFTs]);
 
   if (!isConnected) {
     return (
@@ -105,7 +87,7 @@ export default function ProfilePage() {
       </div>
 
       <Header />
-      <main className="pt-20 md:pt-20 pb-8 md:pb-12 max-w-7xl mx-auto px-3 md:px-4 relative z-10">
+      <main className="pt-16 md:pt-20 pb-8 md:pb-12 max-w-7xl mx-auto px-3 md:px-4 relative z-10">
         {/* 用户信息卡片 */}
         <div className="glass-cyber rounded-xl p-6 md:p-8 mb-6 md:mb-10 relative overflow-hidden">
           <div className="absolute top-0 right-0 w-32 md:w-64 h-32 md:h-64 bg-cyber-primary/5 rounded-full blur-3xl" />
@@ -145,7 +127,7 @@ export default function ProfilePage() {
               <div className="text-5xl md:text-6xl mb-4 opacity-50">📦</div>
               <p className="text-gray-400 text-lg mb-2">暂无 NFT</p>
               <p className="text-gray-500 text-sm">
-                去首页Mint一个属于你的赛博祝福吧
+                去首页 Mint 一个属于你的赛博祝福吧
               </p>
             </div>
           </div>
@@ -157,28 +139,11 @@ export default function ProfilePage() {
                 tokenId={nft.tokenId}
                 blessing={nft.blessing}
                 rarity={nft.rarity}
-                price={nft.listing?.price}
-                isListed={nft.listing?.isListed}
-                onList={() => setSelectedNFT(nft)}
               />
             ))}
           </div>
         )}
       </main>
-
-      {/* List Modal */}
-      {selectedNFT && (
-        <ListModal
-          isOpen={!!selectedNFT}
-          onClose={() => setSelectedNFT(null)}
-          onListed={handleListed}
-          tokenId={selectedNFT.tokenId}
-          blessing={selectedNFT.blessing}
-          rarity={selectedNFT.rarity}
-          currentPrice={selectedNFT.listing?.price}
-          isListed={selectedNFT.listing?.isListed}
-        />
-      )}
     </div>
   );
 }

@@ -1,4 +1,4 @@
-import { Header } from '@/components/Header';
+import { Header } from "@/components/Header";
 
 export default function MarketPage() {
   return (
@@ -11,17 +11,13 @@ export default function MarketPage() {
 
       <Header />
       <main className="pt-16 md:pt-20 pb-8 md:pb-12 max-w-7xl mx-auto px-3 md:px-4 relative z-10">
-        {/* 页面标题 */}
-        <div className="mb-6 md:mb-10">
-          <h1 className="text-3xl md:text-4xl font-bold gradient-text mb-2 md:mb-3">市场</h1>
-          <p className="text-gray-400 text-sm md:text-base">浏览并购买他人的赛博祝福</p>
-        </div>
-
         {/* Coming Soon */}
         <div className="flex items-center justify-center min-h-[50vh]">
           <div className="text-center">
             <div className="text-6xl md:text-8xl mb-4">🚧</div>
-            <h2 className="text-2xl md:text-3xl font-bold text-white mb-2">Coming Soon</h2>
+            <h2 className="text-2xl md:text-3xl font-bold text-white mb-2">
+              Coming Soon
+            </h2>
             <p className="text-gray-400">市场功能正在开发中，敬请期待</p>
           </div>
         </div>
