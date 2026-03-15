@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, Suspense, useRef } from 'react';
+import { useEffect, Suspense } from 'react';
 import { usePathname, useSearchParams } from 'next/navigation';
 import NProgress from 'nprogress';
 import 'nprogress/nprogress.css';
@@ -8,27 +8,32 @@ import 'nprogress/nprogress.css';
 function ProgressBarContent() {
   const pathname = usePathname();
   const searchParams = useSearchParams();
-  const isFirstMount = useRef(true);
 
   useEffect(() => {
-    NProgress.configure({ showSpinner: false, minimum: 0.1, speed: 0.5 });
+    NProgress.configure({ showSpinner: false, minimum: 0.1 });
 
-    // 首次挂载不触发，避免页面加载时就显示进度条
-    if (isFirstMount.current) {
-      isFirstMount.current = false;
-      return;
-    }
-
-    // 路由变化时显示进度条
+    // 路由变化时启动进度条
     NProgress.start();
 
-    // 短暂延迟后自动完成，避免闪烁
-    const timer = setTimeout(() => {
-      NProgress.done();
-    }, 200);
+    // 等待 DOM 更新完成后再结束进度条
+    // 使用 requestAnimationFrame 确保进度条走完
+    const completeProgress = () => {
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          NProgress.done();
+        });
+      });
+    };
+
+    // 监听页面加载完成
+    if (document.readyState === 'complete') {
+      completeProgress();
+    } else {
+      window.addEventListener('load', completeProgress);
+    }
 
     return () => {
-      clearTimeout(timer);
+      window.removeEventListener('load', completeProgress);
     };
   }, [pathname, searchParams]);
 
