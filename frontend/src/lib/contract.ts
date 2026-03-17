@@ -119,7 +119,7 @@ export const NFT_ABI = [
 ] as const;
 
 export const NFT_ABI_MARKETPLACE = [
-  "event ItemListed(address indexed seller, uint256 indexed tokenId, uint256 price)",
-  "event ItemBought(address indexed buyer, uint256 indexed tokenId, uint256 price)",
-  "event ItemCanceled(address indexed seller, uint256 indexed tokenId)",
+  "event ItemListed(uint256 indexed tokenId, address indexed seller, uint256 price)",
+  "event ItemBought(uint256 indexed tokenId, address indexed buyer, uint256 price)",
+  "event ListingCancelled(uint256 indexed tokenId)",
 ] as const;

@@ -1,0 +1,57 @@
+[
+  {
+    "type": "event",
+    "name": "Transfer",
+    "inputs": [
+      { "indexed": true, "name": "from", "type": "address" },
+      { "indexed": true, "name": "to", "type": "address" },
+      { "indexed": true, "name": "tokenId", "type": "uint256" }
+    ]
+  },
+  {
+    "type": "event",
+    "name": "ItemListed",
+    "inputs": [
+      { "indexed": true, "name": "tokenId", "type": "uint256" },
+      { "indexed": true, "name": "seller", "type": "address" },
+      { "indexed": false, "name": "price", "type": "uint256" }
+    ]
+  },
+  {
+    "type": "event",
+    "name": "ItemBought",
+    "inputs": [
+      { "indexed": true, "name": "tokenId", "type": "uint256" },
+      { "indexed": true, "name": "buyer", "type": "address" },
+      { "indexed": false, "name": "price", "type": "uint256" }
+    ]
+  },
+  {
+    "type": "event",
+    "name": "ListingCancelled",
+    "inputs": [
+      { "indexed": true, "name": "tokenId", "type": "uint256" }
+    ]
+  },
+  {
+    "type": "function",
+    "name": "getBlessing",
+    "inputs": [{ "name": "tokenId", "type": "uint256" }],
+    "outputs": [{ "name": "", "type": "string" }],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "getRarity",
+    "inputs": [{ "name": "tokenId", "type": "uint256" }],
+    "outputs": [{ "name": "", "type": "uint8" }],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "ownerOf",
+    "inputs": [{ "name": "tokenId", "type": "uint256" }],
+    "outputs": [{ "name": "", "type": "address" }],
+    "stateMutability": "view"
+  }
+]

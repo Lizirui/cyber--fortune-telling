@@ -1,24 +1,31 @@
 "use client";
 
-import { useAccount, useReadContract } from "wagmi";
+import { useAccount, useReadContract, useWriteContract, useWaitForTransactionReceipt } from "wagmi";
 import { useEffect, useState, useCallback } from "react";
 import { Header } from "@/components/Header";
 import { NFTCard } from "@/components/NFTCard";
+import { ListNFTModal } from "@/components/ListNFTModal";
 import { NFT_ABI } from "@/lib/contract";
 import { CONTRACT_ADDRESS, BACKEND_URL } from "@/lib/constants";
-
-type Rarity = 0 | 1 | 2 | 3 | 4 | 5;
+import { Rarity } from "@/lib/types";
 
 interface UserNFT {
   tokenId: number;
   blessing: string;
   rarity: Rarity;
+  isListed?: boolean;
+  listingPrice?: string;
 }
 
 export default function ProfilePage() {
   const { address, isConnected } = useAccount();
   const [nfts, setNfts] = useState<UserNFT[]>([]);
   const [loading, setLoading] = useState(true);
+
+  // 上架弹窗
+  const [listModalTokenId, setListModalTokenId] = useState<number | null>(null);
+  // 取消上架
+  const [cancelTokenId, setCancelTokenId] = useState<number | null>(null);
 
   const { data: balance } = useReadContract({
     address: CONTRACT_ADDRESS,
@@ -27,6 +34,7 @@ export default function ProfilePage() {
     args: address ? [address] : undefined,
   });
 
+  // 获取用户的 NFT 列表
   const fetchUserNFTs = useCallback(async () => {
     if (!address) return;
 
@@ -36,10 +44,45 @@ export default function ProfilePage() {
       const data = await response.json();
 
       if (data.nfts) {
-        setNfts(data.nfts);
+        // 检查每个 NFT 是否已上架
+        const nftsWithListingStatus: UserNFT[] = await Promise.all(
+          data.nfts.map(async (nft: { tokenId: number; blessing: string; rarity: Rarity }) => {
+            try {
+              const listingRes = await fetch(`${BACKEND_URL}/api/market/listings/${nft.tokenId}`);
+              if (listingRes.ok) {
+                const listingData = await listingRes.json();
+                return {
+                  ...nft,
+                  isListed: true,
+                  listingPrice: listingData.priceEth,
+                };
+              }
+            } catch {
+              // Listing not found
+            }
+            return {
+              ...nft,
+              isListed: false,
+            };
+          })
+        );
+        setNfts(nftsWithListingStatus);
       }
     } catch (error) {
       console.error("Failed to fetch user NFTs:", error);
+      // 即使失败也设置 NFT（不显示上架状态）
+      try {
+        const response = await fetch(`${BACKEND_URL}/api/nft/user/${address}`);
+        const data = await response.json();
+        if (data.nfts) {
+          setNfts(data.nfts.map((nft: { tokenId: number; blessing: string; rarity: Rarity }) => ({
+            ...nft,
+            isListed: false,
+          })));
+        }
+      } catch {
+        // Ignore
+      }
     } finally {
       setLoading(false);
     }
@@ -60,6 +103,38 @@ export default function ProfilePage() {
       }
     }
   }, [address, balance, fetchUserNFTs]);
+
+  const handleListSuccess = () => {
+    fetchUserNFTs();
+    setListModalTokenId(null);
+  };
+
+  // 取消上架
+  const handleCancelListing = async (tokenId: number) => {
+    setCancelTokenId(tokenId);
+  };
+
+  const { data: cancelHash, writeContract: writeCancelContract } = useWriteContract();
+  const { isLoading: isCanceling, isSuccess: isCancelSuccess } = useWaitForTransactionReceipt({
+    hash: cancelHash,
+  });
+
+  useEffect(() => {
+    if (isCancelSuccess && cancelTokenId !== null) {
+      fetchUserNFTs();
+      setCancelTokenId(null);
+    }
+  }, [isCancelSuccess, cancelTokenId, fetchUserNFTs]);
+
+  const confirmCancel = () => {
+    if (cancelTokenId === null) return;
+    writeCancelContract({
+      address: CONTRACT_ADDRESS,
+      abi: NFT_ABI,
+      functionName: 'cancelListing',
+      args: [BigInt(cancelTokenId)],
+    });
+  };
 
   if (!isConnected) {
     return (
@@ -131,16 +206,88 @@ export default function ProfilePage() {
         ) : (
           <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 md:gap-6">
             {nfts.map((nft) => (
-              <NFTCard
-                key={nft.tokenId}
-                tokenId={nft.tokenId}
-                blessing={nft.blessing}
-                rarity={nft.rarity}
-              />
+              <div key={nft.tokenId} className="relative">
+                <NFTCard
+                  tokenId={nft.tokenId}
+                  blessing={nft.blessing}
+                  rarity={nft.rarity}
+                />
+                {/* 上架/下架按钮 */}
+                <div className="absolute bottom-0 left-0 right-0 p-3 bg-gradient-to-t from-black/80 to-transparent">
+                  {nft.isListed ? (
+                    <div className="flex items-center justify-between">
+                      <span className="text-cyber-primary text-xs font-medium">
+                        {nft.listingPrice} ETH
+                      </span>
+                      <button
+                        onClick={() => handleCancelListing(nft.tokenId)}
+                        disabled={cancelTokenId !== null}
+                        className="px-2 py-1 text-xs bg-red-500/20 hover:bg-red-500/40 text-red-400 rounded transition-colors disabled:opacity-50"
+                      >
+                        Cancel
+                      </button>
+                    </div>
+                  ) : (
+                    <button
+                      onClick={() => setListModalTokenId(nft.tokenId)}
+                      className="w-full py-1.5 text-xs bg-cyber-primary/20 hover:bg-cyber-primary/30 text-cyber-primary rounded transition-colors"
+                    >
+                      List for Sale
+                    </button>
+                  )}
+                </div>
+              </div>
             ))}
           </div>
         )}
       </main>
+
+      {/* 上架弹窗 */}
+      {listModalTokenId !== null && (
+        <ListNFTModal
+          isOpen={true}
+          onClose={() => setListModalTokenId(null)}
+          tokenId={listModalTokenId}
+          onSuccess={handleListSuccess}
+        />
+      )}
+
+      {/* 取消上架确认弹窗 */}
+      {cancelTokenId !== null && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center">
+          <div
+            className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+            onClick={() => setCancelTokenId(null)}
+          />
+          <div className="relative glass-cyber rounded-2xl p-6 w-full max-w-md mx-4">
+            <h2 className="text-xl font-bold text-white mb-4">Cancel Listing</h2>
+            <p className="text-gray-400 mb-4">
+              Are you sure you want to cancel the listing for NFT #{cancelTokenId}?
+            </p>
+            {isCanceling && (
+              <div className="mb-4 p-3 bg-yellow-500/20 border border-yellow-500 rounded-lg text-yellow-400 text-sm">
+                Cancelling on chain...
+              </div>
+            )}
+            <div className="flex gap-3">
+              <button
+                onClick={() => setCancelTokenId(null)}
+                disabled={isCanceling}
+                className="flex-1 px-4 py-3 bg-gray-700 hover:bg-gray-600 text-white font-medium rounded-lg transition-colors disabled:opacity-50"
+              >
+                No, Keep
+              </button>
+              <button
+                onClick={confirmCancel}
+                disabled={isCanceling}
+                className="flex-1 px-4 py-3 bg-red-500 hover:bg-red-600 text-white font-bold rounded-lg transition-colors disabled:opacity-50"
+              >
+                {isCanceling ? 'Cancelling...' : 'Yes, Cancel'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

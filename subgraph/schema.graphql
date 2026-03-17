@@ -1,0 +1,29 @@
+type NFT @entity {
+  id: ID!
+  tokenId: BigInt!
+  owner: Bytes!
+  blessing: String!
+  rarity: Int!
+  mintedAt: BigInt!
+  listing: Listing
+}
+
+type Listing @entity {
+  id: ID!
+  nft: NFT!
+  seller: Bytes!
+  price: BigInt!
+  isActive: Boolean!
+  listedAt: BigInt!
+}
+
+type Transaction @entity {
+  id: ID!
+  nft: NFT!
+  eventType: String!
+  from: Bytes
+  to: Bytes
+  price: BigInt
+  timestamp: BigInt!
+  blockNumber: BigInt!
+}
