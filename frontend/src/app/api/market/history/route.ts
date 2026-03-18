@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getTransactionHistory } from '@/lib/db/marketplace';
 import type { MarketTransaction } from '@/lib/types';
 
-const WEI_PER_ETH = BigInt(1e18);
+export const dynamic = 'force-dynamic';
 
 function weiToEth(wei: string): string {
   const weiBigInt = BigInt(wei);

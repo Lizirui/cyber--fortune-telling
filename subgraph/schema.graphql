@@ -17,7 +17,7 @@ type Listing @entity {
   listedAt: BigInt!
 }
 
-type Transaction @entity {
+type Transaction @entity(immutable: true) {
   id: ID!
   nft: NFT!
   eventType: String!

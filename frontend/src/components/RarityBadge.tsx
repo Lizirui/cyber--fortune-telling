@@ -1,4 +1,4 @@
-type Rarity = 0 | 1 | 2 | 3 | 4 | 5;
+import { Rarity } from '@/lib/types';
 
 const RARITY_CONFIG: Record<Rarity, { name: string; color: string }> = {
   0: { name: 'N', color: '#888888' },    // 灰色

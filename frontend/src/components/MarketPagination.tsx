@@ -56,7 +56,7 @@ export function MarketPagination({
         disabled={currentPage === 1}
         className="px-3 py-1.5 rounded-lg text-sm bg-cyber-bg-light text-gray-400 hover:text-white hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
       >
-        ← Prev
+        上一页
       </button>
 
       {/* 页码 */}
@@ -95,7 +95,7 @@ export function MarketPagination({
         disabled={currentPage === totalPages}
         className="px-3 py-1.5 rounded-lg text-sm bg-cyber-bg-light text-gray-400 hover:text-white hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
       >
-        Next →
+        下一页
       </button>
     </div>
   );

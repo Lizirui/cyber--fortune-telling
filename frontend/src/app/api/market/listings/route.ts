@@ -2,8 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getActiveListings } from '@/lib/db/marketplace';
 import type { Listing } from '@/lib/types';
 
-// 1 ETH = 10^18 wei
-const WEI_PER_ETH = BigInt(1e18);
+export const dynamic = 'force-dynamic';
 
 function weiToEth(wei: string): string {
   const weiBigInt = BigInt(wei);

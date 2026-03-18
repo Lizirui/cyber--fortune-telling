@@ -92,7 +92,7 @@ export function ListingCard({ listing, onBuy }: ListingCardProps) {
 
         {/* 卖家地址 */}
         <div className="text-xs text-gray-500 truncate">
-          Seller: {listing.seller.slice(0, 6)}...{listing.seller.slice(-4)}
+          卖家: {listing.seller.slice(0, 6)}...{listing.seller.slice(-4)}
         </div>
 
         {/* 购买按钮 */}
@@ -100,7 +100,7 @@ export function ListingCard({ listing, onBuy }: ListingCardProps) {
           onClick={handleBuy}
           className="w-full py-2 px-4 bg-cyber-primary hover:bg-cyber-primary/80 text-black font-bold rounded-lg transition-colors"
         >
-          Buy Now
+          立即购买
         </button>
       </div>
     </div>

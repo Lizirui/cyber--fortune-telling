@@ -18,6 +18,10 @@
 **/cache/
 **/broadcast/
 
+# Subgraph
+subgraph/build/
+subgraph/generated/
+
 # 日志
 *.log
 npm-debug.log*

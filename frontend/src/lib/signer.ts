@@ -13,14 +13,18 @@ export async function generateSignature(
   rarity: number,
   tokenId: number,
   userAddress: string
-): Promise<string> {
+): Promise<{ signature: string; blessingHash: string }> {
   const signer = getSigner();
 
-  // 构建签名哈希（只包含 tokenId 和 userAddress，与合约匹配）
+  // 计算祝福语的哈希
+  const blessingHash = ethers.keccak256(ethers.toUtf8Bytes(blessing));
+
+  // 构建签名哈希（包含 tokenId + userAddress + rarity + blessingHash，与合约匹配）
+  // 注意：userAddress 使用原始格式，与合约中的 msg.sender 匹配
   const hash = ethers.keccak256(
     ethers.solidityPacked(
-      ['uint256', 'address'],
-      [tokenId, userAddress]
+      ['uint256', 'address', 'uint8', 'bytes32'],
+      [tokenId, userAddress, rarity, blessingHash]
     )
   );
 
@@ -28,7 +32,7 @@ export async function generateSignature(
   // 这与合约中的 toEthSignedMessageHash() 和 ECDSA.recover() 匹配
   const signature = await signer.signMessage(ethers.getBytes(hash));
 
-  return signature;
+  return { signature, blessingHash };
 }
 
 export function getSignerAddress(): string {

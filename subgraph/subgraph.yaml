@@ -1,48 +1,33 @@
-{
-  "version": "0.0.5",
-  "schema": {
-    "file": "./schema.graphql"
-  },
-  "dataSources": {
-    "CyberFortuneNFT": {
-      "name": "CyberFortuneNFT",
-      "network": "base-sepolia",
-      "source": {
-        "address": "0x YOUR CONTRACT ADDRESS HERE",
-        "abi": "CyberFortuneNFT",
-        "startBlock": 0
-      },
-      "mapping": {
-        "kind": "ethereum/events",
-        "apiVersion": "0.0.7",
-        "language": "typescript/assemblyscript",
-        "entities": ["NFT", "Listing", "Transaction"],
-        "abis": [
-          {
-            "name": "CyberFortuneNFT",
-            "file": "./abis/CyberFortuneNFT.json"
-          }
-        ],
-        "eventHandlers": [
-          {
-            "event": "Transfer(indexed address,indexed address,indexed uint256)",
-            "handler": "handleTransfer"
-          },
-          {
-            "event": "ItemListed(indexed uint256,indexed address,uint256)",
-            "handler": "handleItemListed"
-          },
-          {
-            "event": "ItemBought(indexed uint256,indexed address,uint256)",
-            "handler": "handleItemBought"
-          },
-          {
-            "event": "ListingCancelled(indexed uint256)",
-            "handler": "handleListingCancelled"
-          }
-        ],
-        "file": "./src/mapping.ts"
-      }
-    }
-  }
-}
+specVersion: 0.0.5
+schema:
+  file: ./schema.graphql
+
+dataSources:
+  - kind: ethereum
+    name: CyberFortuneNFT
+    network: base-sepolia
+    source:
+      address: "0x257752169fdf275d91De20e281f0e11538Fd7007"
+      abi: CyberFortuneNFT
+      startBlock: 1780000
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.7
+      language: typescript
+      entities:
+        - NFT
+        - Listing
+        - Transaction
+      abis:
+        - name: CyberFortuneNFT
+          file: ./abis/CyberFortuneNFT.json
+      eventHandlers:
+        - event: Transfer(indexed address,indexed address,indexed uint256)
+          handler: handleTransfer
+        - event: ItemListed(indexed uint256,indexed address,uint256)
+          handler: handleItemListed
+        - event: ItemBought(indexed uint256,indexed address,uint256)
+          handler: handleItemBought
+        - event: ListingCancelled(indexed uint256)
+          handler: handleListingCancelled
+      file: ./src/mapping.ts

@@ -40,7 +40,7 @@ export const NFT_ABI = [
     inputs: [
       { name: "blessing", type: "string", internalType: "string" },
       { name: "rarity", type: "uint8", internalType: "uint8" },
-      { name: "expiresAt", type: "uint256", internalType: "uint256" },
+      { name: "blessingHash", type: "bytes32", internalType: "bytes32" },
       { name: "signature", type: "bytes", internalType: "bytes" },
     ],
     outputs: [],

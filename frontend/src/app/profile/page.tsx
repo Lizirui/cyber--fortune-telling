@@ -1,12 +1,17 @@
 "use client";
 
-import { useAccount, useReadContract, useWriteContract, useWaitForTransactionReceipt } from "wagmi";
+import {
+  useAccount,
+  useReadContract,
+  useWriteContract,
+  useWaitForTransactionReceipt,
+} from "wagmi";
 import { useEffect, useState, useCallback } from "react";
 import { Header } from "@/components/Header";
 import { NFTCard } from "@/components/NFTCard";
 import { ListNFTModal } from "@/components/ListNFTModal";
 import { NFT_ABI } from "@/lib/contract";
-import { CONTRACT_ADDRESS, BACKEND_URL } from "@/lib/constants";
+import { CONTRACT_ADDRESS, API_BASE_URL } from "@/lib/constants";
 import { Rarity } from "@/lib/types";
 
 interface UserNFT {
@@ -40,31 +45,41 @@ export default function ProfilePage() {
 
     setLoading(true);
     try {
-      const response = await fetch(`${BACKEND_URL}/api/nft/user/${address}`);
+      const response = await fetch(`${API_BASE_URL}/api/nft/user/${address}`);
       const data = await response.json();
 
       if (data.nfts) {
-        // 检查每个 NFT 是否已上架
+        // 检查每个 NFT 是否已上架（直接从链上读取）
         const nftsWithListingStatus: UserNFT[] = await Promise.all(
-          data.nfts.map(async (nft: { tokenId: number; blessing: string; rarity: Rarity }) => {
-            try {
-              const listingRes = await fetch(`${BACKEND_URL}/api/market/listings/${nft.tokenId}`);
-              if (listingRes.ok) {
-                const listingData = await listingRes.json();
-                return {
-                  ...nft,
-                  isListed: true,
-                  listingPrice: listingData.priceEth,
-                };
+          data.nfts.map(
+            async (nft: {
+              tokenId: number;
+              blessing: string;
+              rarity: Rarity;
+            }) => {
+              try {
+                const listingRes = await fetch(
+                  `/api/nft/listing/${nft.tokenId}`,
+                );
+                if (listingRes.ok) {
+                  const listingData = await listingRes.json();
+                  if (listingData.isListed) {
+                    return {
+                      ...nft,
+                      isListed: true,
+                      listingPrice: listingData.priceEth,
+                    };
+                  }
+                }
+              } catch {
+                // Listing not found
               }
-            } catch {
-              // Listing not found
-            }
-            return {
-              ...nft,
-              isListed: false,
-            };
-          })
+              return {
+                ...nft,
+                isListed: false,
+              };
+            },
+          ),
         );
         setNfts(nftsWithListingStatus);
       }
@@ -72,13 +87,17 @@ export default function ProfilePage() {
       console.error("Failed to fetch user NFTs:", error);
       // 即使失败也设置 NFT（不显示上架状态）
       try {
-        const response = await fetch(`${BACKEND_URL}/api/nft/user/${address}`);
+        const response = await fetch(`${API_BASE_URL}/api/nft/user/${address}`);
         const data = await response.json();
         if (data.nfts) {
-          setNfts(data.nfts.map((nft: { tokenId: number; blessing: string; rarity: Rarity }) => ({
-            ...nft,
-            isListed: false,
-          })));
+          setNfts(
+            data.nfts.map(
+              (nft: { tokenId: number; blessing: string; rarity: Rarity }) => ({
+                ...nft,
+                isListed: false,
+              }),
+            ),
+          );
         }
       } catch {
         // Ignore
@@ -114,10 +133,17 @@ export default function ProfilePage() {
     setCancelTokenId(tokenId);
   };
 
-  const { data: cancelHash, writeContract: writeCancelContract } = useWriteContract();
-  const { isLoading: isCanceling, isSuccess: isCancelSuccess } = useWaitForTransactionReceipt({
-    hash: cancelHash,
-  });
+  const {
+    data: cancelHash,
+    writeContract: writeCancelContract,
+    isPending: isCancelPending,
+  } = useWriteContract();
+  const { isLoading: isCanceling, isSuccess: isCancelSuccess } =
+    useWaitForTransactionReceipt({
+      hash: cancelHash,
+    });
+
+  const isCancelling = isCancelPending || isCanceling;
 
   useEffect(() => {
     if (isCancelSuccess && cancelTokenId !== null) {
@@ -131,7 +157,7 @@ export default function ProfilePage() {
     writeCancelContract({
       address: CONTRACT_ADDRESS,
       abi: NFT_ABI,
-      functionName: 'cancelListing',
+      functionName: "cancelListing",
       args: [BigInt(cancelTokenId)],
     });
   };
@@ -204,16 +230,16 @@ export default function ProfilePage() {
             </div>
           </div>
         ) : (
-          <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 md:gap-6">
+          <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-6">
             {nfts.map((nft) => (
-              <div key={nft.tokenId} className="relative">
+              <div key={nft.tokenId} className="flex flex-col gap-2">
                 <NFTCard
                   tokenId={nft.tokenId}
                   blessing={nft.blessing}
                   rarity={nft.rarity}
                 />
                 {/* 上架/下架按钮 */}
-                <div className="absolute bottom-0 left-0 right-0 p-3 bg-gradient-to-t from-black/80 to-transparent">
+                <div className="p-2 bg-cyber-bg-light rounded-lg">
                   {nft.isListed ? (
                     <div className="flex items-center justify-between">
                       <span className="text-cyber-primary text-xs font-medium">
@@ -222,17 +248,17 @@ export default function ProfilePage() {
                       <button
                         onClick={() => handleCancelListing(nft.tokenId)}
                         disabled={cancelTokenId !== null}
-                        className="px-2 py-1 text-xs bg-red-500/20 hover:bg-red-500/40 text-red-400 rounded transition-colors disabled:opacity-50"
+                        className="px-2 py-1 text-xs bg-red-500/20 hover:bg-red-500/40 text-red-400 rounded transition-colors disabled:opacity-50 cursor-pointer"
                       >
-                        Cancel
+                        取消
                       </button>
                     </div>
                   ) : (
                     <button
                       onClick={() => setListModalTokenId(nft.tokenId)}
-                      className="w-full py-1.5 text-xs bg-cyber-primary/20 hover:bg-cyber-primary/30 text-cyber-primary rounded transition-colors"
+                      className="w-full py-2 text-xs bg-cyber-primary/20 hover:bg-cyber-primary/30 text-cyber-primary rounded transition-colors cursor-pointer"
                     >
-                      List for Sale
+                      上架出售
                     </button>
                   )}
                 </div>
@@ -260,29 +286,29 @@ export default function ProfilePage() {
             onClick={() => setCancelTokenId(null)}
           />
           <div className="relative glass-cyber rounded-2xl p-6 w-full max-w-md mx-4">
-            <h2 className="text-xl font-bold text-white mb-4">Cancel Listing</h2>
+            <h2 className="text-xl font-bold text-white mb-4">取消上架</h2>
             <p className="text-gray-400 mb-4">
-              Are you sure you want to cancel the listing for NFT #{cancelTokenId}?
+              确定要取消 NFT # {cancelTokenId} 的上架吗？
             </p>
-            {isCanceling && (
+            {isCancelling && (
               <div className="mb-4 p-3 bg-yellow-500/20 border border-yellow-500 rounded-lg text-yellow-400 text-sm">
-                Cancelling on chain...
+                链上处理中...
               </div>
             )}
             <div className="flex gap-3">
               <button
                 onClick={() => setCancelTokenId(null)}
-                disabled={isCanceling}
-                className="flex-1 px-4 py-3 bg-gray-700 hover:bg-gray-600 text-white font-medium rounded-lg transition-colors disabled:opacity-50"
+                disabled={isCancelling}
+                className="flex-1 px-4 py-3 bg-gray-700 hover:bg-gray-600 text-white font-medium rounded-lg transition-colors disabled:opacity-50 cursor-pointer disabled:cursor-not-allowed"
               >
-                No, Keep
+                保留
               </button>
               <button
                 onClick={confirmCancel}
-                disabled={isCanceling}
-                className="flex-1 px-4 py-3 bg-red-500 hover:bg-red-600 text-white font-bold rounded-lg transition-colors disabled:opacity-50"
+                disabled={isCancelling}
+                className="flex-1 px-4 py-3 bg-red-500 hover:bg-red-600 text-white font-bold rounded-lg transition-colors disabled:opacity-50 cursor-pointer disabled:cursor-not-allowed"
               >
-                {isCanceling ? 'Cancelling...' : 'Yes, Cancel'}
+                {isCancelling ? "取消中..." : "确认取消"}
               </button>
             </div>
           </div>

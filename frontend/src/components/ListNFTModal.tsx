@@ -1,14 +1,14 @@
-'use client';
+"use client";
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect } from "react";
 import {
   useAccount,
   useWriteContract,
   useWaitForTransactionReceipt,
-} from 'wagmi';
-import { parseEther } from 'viem';
-import { NFT_ABI } from '@/lib/contract';
-import { CONTRACT_ADDRESS } from '@/lib/constants';
+} from "wagmi";
+import { parseEther } from "viem";
+import { NFT_ABI } from "@/lib/contract";
+import { CONTRACT_ADDRESS } from "@/lib/constants";
 
 interface ListNFTModalProps {
   isOpen: boolean;
@@ -24,10 +24,14 @@ export function ListNFTModal({
   onSuccess,
 }: ListNFTModalProps) {
   const { isConnected } = useAccount();
-  const [price, setPrice] = useState('');
+  const [price, setPrice] = useState("");
   const [error, setError] = useState<string | null>(null);
 
-  const { data: hash, writeContract, isPending: isWriting } = useWriteContract();
+  const {
+    data: hash,
+    writeContract,
+    isPending: isWriting,
+  } = useWriteContract();
   const {
     isLoading: isConfirming,
     isSuccess,
@@ -45,7 +49,7 @@ export function ListNFTModal({
   // 监听交易失败
   useEffect(() => {
     if (isTxError) {
-      setError('Transaction failed on chain');
+      setError("Transaction failed on chain");
     }
   }, [isTxError]);
 
@@ -54,7 +58,7 @@ export function ListNFTModal({
 
     const priceInEth = parseFloat(price);
     if (isNaN(priceInEth) || priceInEth <= 0) {
-      setError('Please enter a valid price');
+      setError("Please enter a valid price");
       return;
     }
 
@@ -64,11 +68,11 @@ export function ListNFTModal({
       writeContract({
         address: CONTRACT_ADDRESS,
         abi: NFT_ABI,
-        functionName: 'listItem',
+        functionName: "listItem",
         args: [BigInt(tokenId), parseEther(price)],
       });
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to list');
+      setError(err instanceof Error ? err.message : "Failed to list");
     }
   };
 
@@ -86,11 +90,13 @@ export function ListNFTModal({
 
       {/* 弹窗内容 */}
       <div className="relative glass-cyber rounded-2xl p-6 w-full max-w-md mx-4">
-        <h2 className="text-xl font-bold text-white mb-4">List NFT #{tokenId}</h2>
+        <h2 className="text-xl font-bold text-white mb-4">
+          上架 NFT #{tokenId}
+        </h2>
 
         {/* 价格输入 */}
         <div className="mb-4">
-          <label className="block text-gray-400 text-sm mb-2">Price (ETH)</label>
+          <label className="block text-gray-400 text-sm mb-2">价格 (ETH)</label>
           <input
             type="number"
             step="0.001"
@@ -113,12 +119,12 @@ export function ListNFTModal({
         {/* 状态信息 */}
         {isWriting && (
           <div className="mb-4 p-3 bg-blue-500/20 border border-blue-500 rounded-lg text-blue-400 text-sm">
-            Please confirm in your wallet...
+            请在钱包中确认交易...
           </div>
         )}
         {isConfirming && (
           <div className="mb-4 p-3 bg-yellow-500/20 border border-yellow-500 rounded-lg text-yellow-400 text-sm">
-            Confirming transaction on chain...
+            链上确认中...
           </div>
         )}
 
@@ -127,16 +133,16 @@ export function ListNFTModal({
           <button
             onClick={onClose}
             disabled={isLoading}
-            className="flex-1 px-4 py-3 bg-gray-700 hover:bg-gray-600 text-white font-medium rounded-lg transition-colors disabled:opacity-50"
+            className="flex-1 px-4 py-3 bg-gray-700 hover:bg-gray-600 text-white font-medium rounded-lg transition-colors disabled:opacity-50 cursor-pointer"
           >
-            Cancel
+            取消
           </button>
           <button
             onClick={handleList}
             disabled={isLoading || !price}
-            className="flex-1 px-4 py-3 bg-cyber-primary hover:bg-cyber-primary/80 text-black font-bold rounded-lg transition-colors disabled:opacity-50"
+            className="flex-1 px-4 py-3 bg-cyber-primary hover:bg-cyber-primary/80 text-black font-bold rounded-lg transition-colors disabled:opacity-50 cursor-pointer disabled:cursor-not-allowed"
           >
-            {isLoading ? 'Processing...' : 'List'}
+            {isLoading ? "处理中..." : "上架"}
           </button>
         </div>
       </div>

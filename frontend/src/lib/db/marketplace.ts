@@ -1,20 +1,37 @@
 import { Pool } from 'pg';
 
-// 延迟创建数据库客户端，只在运行时创建
-function getPool() {
-  const connectionString = process.env.POSTGRES_URL_NON_POOLING || process.env.POSTGRES_URL;
-  return new Pool({
-    connectionString,
-  });
+// 模块级单例 Pool，在 serverless 环境中跨请求复用
+let pool: Pool | null = null;
+
+function getPool(): Pool {
+  if (!pool) {
+    let connectionString = process.env.POSTGRES_URL_NON_POOLING || process.env.POSTGRES_URL;
+
+    if (connectionString) {
+      const url = new URL(connectionString);
+      if (!url.searchParams.has('uselibpqcompat')) {
+        url.searchParams.set('uselibpqcompat', 'true');
+      }
+      if (!url.searchParams.has('sslmode')) {
+        url.searchParams.set('sslmode', 'require');
+      }
+      connectionString = url.toString();
+    }
+
+    pool = new Pool({
+      connectionString,
+      max: 5,
+      idleTimeoutMillis: 30000,
+    });
+  }
+  return pool;
 }
 
 // 初始化市场相关表
 export async function initializeMarketplaceTables(): Promise<void> {
-  const pool = getPool();
-  const client = await pool.connect();
+  const client = await getPool().connect();
 
   try {
-    // NFT 元数据缓存表
     await client.query(`
       CREATE TABLE IF NOT EXISTS nfts (
         token_id INTEGER PRIMARY KEY,
@@ -28,7 +45,6 @@ export async function initializeMarketplaceTables(): Promise<void> {
     await client.query('CREATE INDEX IF NOT EXISTS idx_nfts_owner ON nfts(owner_address)');
     await client.query('CREATE INDEX IF NOT EXISTS idx_nfts_rarity ON nfts(rarity)');
 
-    // 市场挂单表
     await client.query(`
       CREATE TABLE IF NOT EXISTS listings (
         token_id INTEGER PRIMARY KEY,
@@ -42,7 +58,6 @@ export async function initializeMarketplaceTables(): Promise<void> {
     await client.query('CREATE INDEX IF NOT EXISTS idx_listings_active ON listings(is_active) WHERE is_active = TRUE');
     await client.query('CREATE INDEX IF NOT EXISTS idx_listings_seller ON listings(seller_address)');
 
-    // 交易历史表
     await client.query(`
       CREATE TABLE IF NOT EXISTS market_transactions (
         id SERIAL PRIMARY KEY,
@@ -59,7 +74,6 @@ export async function initializeMarketplaceTables(): Promise<void> {
     `);
     await client.query('CREATE INDEX IF NOT EXISTS idx_txns_token ON market_transactions(token_id)');
 
-    // 同步游标表
     await client.query(`
       CREATE TABLE IF NOT EXISTS sync_state (
         key VARCHAR(50) PRIMARY KEY,
@@ -67,11 +81,8 @@ export async function initializeMarketplaceTables(): Promise<void> {
         updated_at TIMESTAMP DEFAULT NOW()
       )
     `);
-
-    console.log('Marketplace tables initialized successfully');
   } finally {
     client.release();
-    await pool.end();
   }
 }
 
@@ -133,11 +144,9 @@ export async function getActiveListings(params: GetListingsParams): Promise<GetL
   const { page, limit, rarity, sort = 'newest' } = params;
   const offset = (page - 1) * limit;
 
-  const pool = getPool();
-  const client = await pool.connect();
+  const client = await getPool().connect();
 
   try {
-    // 构建 WHERE 条件
     const conditions: string[] = ['l.is_active = TRUE'];
     const queryParams: (string | number)[] = [];
     let paramIndex = 1;
@@ -150,7 +159,6 @@ export async function getActiveListings(params: GetListingsParams): Promise<GetL
 
     const whereClause = conditions.join(' AND ');
 
-    // 构建排序
     let orderBy = 'l.listed_at DESC';
     switch (sort) {
       case 'price_asc':
@@ -162,13 +170,8 @@ export async function getActiveListings(params: GetListingsParams): Promise<GetL
       case 'oldest':
         orderBy = 'l.listed_at ASC';
         break;
-      case 'newest':
-      default:
-        orderBy = 'l.listed_at DESC';
-        break;
     }
 
-    // 查询总数
     const countQuery = `
       SELECT COUNT(*) as total
       FROM listings l
@@ -179,7 +182,6 @@ export async function getActiveListings(params: GetListingsParams): Promise<GetL
     const total = parseInt(countResult.rows[0].total);
     const totalPages = Math.ceil(total / limit);
 
-    // 查询列表
     const query = `
       SELECT
         l.token_id,
@@ -209,14 +211,12 @@ export async function getActiveListings(params: GetListingsParams): Promise<GetL
     };
   } finally {
     client.release();
-    await pool.end();
   }
 }
 
 // 根据 tokenId 获取挂单详情
 export async function getListingByTokenId(tokenId: number): Promise<(Listing & { blessing: string; rarity: number; owner_address: string }) | null> {
-  const pool = getPool();
-  const client = await pool.connect();
+  const client = await getPool().connect();
 
   try {
     const query = `
@@ -235,35 +235,21 @@ export async function getListingByTokenId(tokenId: number): Promise<(Listing & {
       WHERE l.token_id = $1
     `;
     const result = await client.query(query, [tokenId]);
-
-    if (result.rows.length === 0) {
-      return null;
-    }
-
-    return result.rows[0];
+    return result.rows.length === 0 ? null : result.rows[0];
   } finally {
     client.release();
-    await pool.end();
   }
 }
 
 // 获取单个 NFT 信息
 export async function getNFTByTokenId(tokenId: number): Promise<NFT | null> {
-  const pool = getPool();
-  const client = await pool.connect();
+  const client = await getPool().connect();
 
   try {
-    const query = 'SELECT * FROM nfts WHERE token_id = $1';
-    const result = await client.query(query, [tokenId]);
-
-    if (result.rows.length === 0) {
-      return null;
-    }
-
-    return result.rows[0];
+    const result = await client.query('SELECT * FROM nfts WHERE token_id = $1', [tokenId]);
+    return result.rows.length === 0 ? null : result.rows[0];
   } finally {
     client.release();
-    await pool.end();
   }
 }
 
@@ -274,7 +260,6 @@ export interface GetTransactionHistoryParams {
   tokenId?: number;
 }
 
-// 交易历史结果
 export interface GetTransactionHistoryResult {
   transactions: MarketTransaction[];
   total: number;
@@ -287,8 +272,7 @@ export async function getTransactionHistory(params: GetTransactionHistoryParams)
   const { page, limit, tokenId } = params;
   const offset = (page - 1) * limit;
 
-  const pool = getPool();
-  const client = await pool.connect();
+  const client = await getPool().connect();
 
   try {
     const conditions: string[] = [];
@@ -303,13 +287,11 @@ export async function getTransactionHistory(params: GetTransactionHistoryParams)
 
     const whereClause = conditions.length > 0 ? `WHERE ${conditions.join(' AND ')}` : '';
 
-    // 查询总数
     const countQuery = `SELECT COUNT(*) as total FROM market_transactions ${whereClause}`;
     const countResult = await client.query(countQuery, queryParams);
     const total = parseInt(countResult.rows[0].total);
     const totalPages = Math.ceil(total / limit);
 
-    // 查询列表
     const query = `
       SELECT * FROM market_transactions
       ${whereClause}
@@ -328,17 +310,15 @@ export async function getTransactionHistory(params: GetTransactionHistoryParams)
     };
   } finally {
     client.release();
-    await pool.end();
   }
 }
 
 // 插入/更新 NFT
 export async function upsertNFT(nft: Omit<NFT, 'updated_at'>): Promise<void> {
-  const pool = getPool();
-  const client = await pool.connect();
+  const client = await getPool().connect();
 
   try {
-    const query = `
+    await client.query(`
       INSERT INTO nfts (token_id, blessing, rarity, owner_address, minted_at)
       VALUES ($1, $2, $3, $4, $5)
       ON CONFLICT (token_id) DO UPDATE SET
@@ -347,27 +327,18 @@ export async function upsertNFT(nft: Omit<NFT, 'updated_at'>): Promise<void> {
         owner_address = EXCLUDED.owner_address,
         minted_at = EXCLUDED.minted_at,
         updated_at = NOW()
-    `;
-    await client.query(query, [
-      nft.token_id,
-      nft.blessing,
-      nft.rarity,
-      nft.owner_address,
-      nft.minted_at,
-    ]);
+    `, [nft.token_id, nft.blessing, nft.rarity, nft.owner_address, nft.minted_at]);
   } finally {
     client.release();
-    await pool.end();
   }
 }
 
 // 插入/更新挂单
 export async function upsertListing(listing: Omit<Listing, 'listed_at'> & { listed_at?: Date }): Promise<void> {
-  const pool = getPool();
-  const client = await pool.connect();
+  const client = await getPool().connect();
 
   try {
-    const query = `
+    await client.query(`
       INSERT INTO listings (token_id, seller_address, price_wei, is_active, tx_hash)
       VALUES ($1, $2, $3, $4, $5)
       ON CONFLICT (token_id) DO UPDATE SET
@@ -376,96 +347,60 @@ export async function upsertListing(listing: Omit<Listing, 'listed_at'> & { list
         is_active = EXCLUDED.is_active,
         tx_hash = EXCLUDED.tx_hash,
         listed_at = COALESCE(listings.listed_at, NOW())
-    `;
-    await client.query(query, [
-      listing.token_id,
-      listing.seller_address,
-      listing.price_wei,
-      listing.is_active,
-      listing.tx_hash,
-    ]);
+    `, [listing.token_id, listing.seller_address, listing.price_wei, listing.is_active, listing.tx_hash]);
   } finally {
     client.release();
-    await pool.end();
   }
 }
 
 // 下架挂单
 export async function deactivateListing(tokenId: number): Promise<void> {
-  const pool = getPool();
-  const client = await pool.connect();
+  const client = await getPool().connect();
 
   try {
-    await client.query(
-      'UPDATE listings SET is_active = FALSE WHERE token_id = $1',
-      [tokenId]
-    );
+    await client.query('UPDATE listings SET is_active = FALSE WHERE token_id = $1', [tokenId]);
   } finally {
     client.release();
-    await pool.end();
   }
 }
 
 // 插入交易记录
 export async function insertTransaction(tx: Omit<MarketTransaction, 'id' | 'created_at'>): Promise<void> {
-  const pool = getPool();
-  const client = await pool.connect();
+  const client = await getPool().connect();
 
   try {
-    const query = `
+    await client.query(`
       INSERT INTO market_transactions (token_id, event_type, from_address, to_address, price_wei, tx_hash, block_number, block_timestamp)
       VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
-    `;
-    await client.query(query, [
-      tx.token_id,
-      tx.event_type,
-      tx.from_address,
-      tx.to_address,
-      tx.price_wei,
-      tx.tx_hash,
-      tx.block_number,
-      tx.block_timestamp,
-    ]);
+    `, [tx.token_id, tx.event_type, tx.from_address, tx.to_address, tx.price_wei, tx.tx_hash, tx.block_number, tx.block_timestamp]);
   } finally {
     client.release();
-    await pool.end();
   }
 }
 
 // 获取同步游标
 export async function getSyncCursor(key: string): Promise<string | null> {
-  const pool = getPool();
-  const client = await pool.connect();
+  const client = await getPool().connect();
 
   try {
-    const query = 'SELECT value FROM sync_state WHERE key = $1';
-    const result = await client.query(query, [key]);
-
-    if (result.rows.length === 0) {
-      return null;
-    }
-
-    return result.rows[0].value;
+    const result = await client.query('SELECT value FROM sync_state WHERE key = $1', [key]);
+    return result.rows.length === 0 ? null : result.rows[0].value;
   } finally {
     client.release();
-    await pool.end();
   }
 }
 
 // 设置同步游标
 export async function setSyncCursor(key: string, value: string): Promise<void> {
-  const pool = getPool();
-  const client = await pool.connect();
+  const client = await getPool().connect();
 
   try {
-    const query = `
+    await client.query(`
       INSERT INTO sync_state (key, value)
       VALUES ($1, $2)
       ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value, updated_at = NOW()
-    `;
-    await client.query(query, [key, value]);
+    `, [key, value]);
   } finally {
     client.release();
-    await pool.end();
   }
 }

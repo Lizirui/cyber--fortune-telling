@@ -1,8 +1,7 @@
 'use client';
 
 import { RarityBadge } from './RarityBadge';
-
-type Rarity = 0 | 1 | 2 | 3 | 4 | 5;
+import { Rarity } from '@/lib/types';
 
 interface NFTModalProps {
   isOpen: boolean;

@@ -1,8 +1,7 @@
 'use client';
 
+import { Rarity } from '@/lib/types';
 import { RarityBadge } from './RarityBadge';
-
-type Rarity = 0 | 1 | 2 | 3 | 4 | 5;
 
 const RARITY_CONFIG: Record<Rarity, {
   gradientFrom: string;

@@ -12,18 +12,18 @@ import {
 import { parseEther } from "viem";
 import { baseSepolia, base } from "wagmi/chains";
 import { NFT_ABI } from "@/lib/contract";
-import { CONTRACT_ADDRESS, MINT_FEE, BACKEND_URL } from "@/lib/constants";
+import { CONTRACT_ADDRESS, MINT_FEE, API_BASE_URL } from "@/lib/constants";
 import { CHAIN } from "@/lib/wagmi";
 import { RarityBadge } from "./RarityBadge";
 import { ConnectWallet } from "./ConnectWallet";
-
-type Rarity = 0 | 1 | 2 | 3 | 4 | 5;
+import { Rarity } from "@/lib/types";
 
 interface MintSignature {
   tokenId: number;
   signature: string;
   blessing: string;
   rarity: number;
+  blessingHash: string;
 }
 
 interface RevealData {
@@ -98,7 +98,7 @@ export function MintBox() {
 
     try {
       const res = await fetch(
-        `${BACKEND_URL}/api/mint/reveal/${signatureData.tokenId}`,
+        `${API_BASE_URL}/api/mint/reveal/${signatureData.tokenId}`,
       );
       const data = await res.json();
 
@@ -133,7 +133,7 @@ export function MintBox() {
 
     try {
       // 1. 调用后端生成签名（不返回 blessing）
-      const res = await fetch(`${BACKEND_URL}/api/mint/generate`, {
+      const res = await fetch(`${API_BASE_URL}/api/mint/generate`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ userAddress: address }),
@@ -144,21 +144,20 @@ export function MintBox() {
         throw new Error(data.error || "生成签名失败");
       }
 
-      // 2. 保存签名数据和祝福语
+      // 2. 保存签名数据（不保存 blessing，避免泄露）
       setSignatureData({
         tokenId: data.tokenId,
         signature: data.signature,
-        blessing: data.blessing,
+        blessing: '', // 不保存 blessing，避免泄露
         rarity: data.rarity,
+        blessingHash: data.blessingHash,
       });
 
       // 3. 调用合约，使用后端返回的真实祝福语
       console.log("Starting mint with params:", {
         address: CONTRACT_ADDRESS,
         tokenId: data.tokenId,
-        blessing: data.blessing,
         rarity: data.rarity,
-        signature: data.signature,
         value: MINT_FEE,
         chain: CHAIN,
       });
@@ -169,13 +168,13 @@ export function MintBox() {
         functionName: "mintWithSignature",
         args: [
           data.blessing, // 使用后端返回的真实祝福语
-          data.rarity,   // 使用后端返回的真实稀有度
-          BigInt(0), // expiresAt - 保留参数
+          data.rarity, // 使用后端返回的真实稀有度
+          data.blessingHash as `0x${string}`, // 祝福语哈希用于验证
           data.signature as `0x${string}`,
         ],
         value: parseEther(MINT_FEE),
+        gas: BigInt(500000), // 设置较高的 gas limit
         chain: CHAIN,
-        gas: BigInt(1500000), // 设置足够的 Gas 限制
       });
 
       setStep("confirming");
@@ -218,18 +217,22 @@ export function MintBox() {
           <h2 className="text-xl md:text-2xl font-bold mb-2 md:mb-3 text-white">
             开始你的算命之旅
           </h2>
-          <p className="text-gray-400 mb-4 md:mb-6 flex flex-col items-center justify-center gap-2">
+          <div className="text-gray-400 mb-4 md:mb-6 flex flex-col items-center justify-center gap-2">
             <div className="flex items-center justify-center gap-2">
               <span className="text-cyber-primary">费用:</span>
-              <span className="text-cyber-accent font-bold">{MINT_FEE} ETH</span>
-              {isTestnet && <span className="text-cyber-primary text-sm">(Sepolia)</span>}
+              <span className="text-cyber-accent font-bold">
+                {MINT_FEE} ETH
+              </span>
+              {isTestnet && (
+                <span className="text-cyber-primary text-sm">(Sepolia)</span>
+              )}
             </div>
             {balance && (
               <span className="text-gray-500 text-xs">
                 你的余额: {balance.formatted} ETH
               </span>
             )}
-          </p>
+          </div>
           <button
             onClick={
               !isCorrectNetwork && isNetworkReady
@@ -268,7 +271,6 @@ export function MintBox() {
             <div className="absolute inset-0 border-4 border-transparent border-t-cyber-primary rounded-full animate-spin" />
           </div>
           <p className="text-cyber-primary text-lg mb-2">正在生成你的命运...</p>
-          <p className="text-gray-500 text-sm">请在钱包中确认交易</p>
         </div>
       )}
 

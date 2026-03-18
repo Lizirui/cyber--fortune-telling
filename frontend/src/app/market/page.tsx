@@ -7,7 +7,6 @@ import { ListingCard } from "@/components/ListingCard";
 import { MarketFilters } from "@/components/MarketFilters";
 import { MarketPagination } from "@/components/MarketPagination";
 import { BuyConfirmModal } from "@/components/BuyConfirmModal";
-import { BACKEND_URL } from "@/lib/constants";
 import type { Listing, Rarity } from "@/lib/types";
 
 export default function MarketPage() {
@@ -39,7 +38,7 @@ export default function MarketPage() {
         params.set("rarity", selectedRarity.toString());
       }
 
-      const response = await fetch(`${BACKEND_URL}/api/market/listings?${params}`);
+      const response = await fetch(`/api/market/listings-onchain?${params}`);
       const data = await response.json();
 
       if (data.listings) {
@@ -56,7 +55,8 @@ export default function MarketPage() {
 
   useEffect(() => {
     fetchListings();
-  }, [fetchListings]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [page, sort, selectedRarity]);
 
   const handlePageChange = (newPage: number) => {
     setPage(newPage);
@@ -96,9 +96,9 @@ export default function MarketPage() {
         {/* 页面标题 */}
         <div className="mb-6 md:mb-10">
           <h1 className="text-2xl md:text-3xl font-bold gradient-text">
-            NFT Marketplace
+            NFT 交易市场
           </h1>
-          <p className="text-gray-400 mt-1">Buy and sell your Cyber Fortune NFTs</p>
+          <p className="text-gray-400 mt-1">买卖你的赛博算命 NFT</p>
         </div>
 
         {/* 筛选器 */}
@@ -121,9 +121,9 @@ export default function MarketPage() {
           <div className="text-center py-12 md:py-20">
             <div className="glass-cyber rounded-xl p-8 md:p-12 inline-block">
               <div className="text-5xl md:text-6xl mb-4 opacity-50">🛒</div>
-              <p className="text-gray-400 text-lg mb-2">No listings available</p>
+              <p className="text-gray-400 text-lg mb-2">暂无可出售的 NFT</p>
               <p className="text-gray-500 text-sm">
-                Be the first to list your NFT!
+                成为第一个上架 NFT 的人吧！
               </p>
             </div>
           </div>

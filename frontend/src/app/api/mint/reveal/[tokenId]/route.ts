@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getBlessing } from '@/lib/kv';
+import { getNFTInfo } from '@/lib/server-contract';
 
 export const runtime = 'nodejs';
 
@@ -15,10 +15,12 @@ export async function GET(
       return NextResponse.json({ error: 'Invalid tokenId' }, { status: 400 });
     }
 
-    const data = await getBlessing(parsedTokenId);
+    // 从链上获取祝福语数据
+    const data = await getNFTInfo(parsedTokenId);
 
-    if (!data) {
-      return NextResponse.json({ error: 'Blessing not found' }, { status: 404 });
+    // 检查 NFT 是否存在（owner 不为 0 地址）
+    if (!data.owner || data.owner === '0x0000000000000000000000000000000000000000') {
+      return NextResponse.json({ error: 'NFT not found' }, { status: 404 });
     }
 
     return NextResponse.json({

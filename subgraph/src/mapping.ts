@@ -1,20 +1,16 @@
 import { BigInt, Bytes, ethereum } from "@graphprotocol/graph-ts";
 import {
   CyberFortuneNFT,
-  NFT,
-  Listing,
-  Transaction,
 } from "../generated/CyberFortuneNFT/CyberFortuneNFT";
+import {
+  Transfer as TransferEvent,
+  ItemListed as ItemListedEvent,
+  ItemBought as ItemBoughtEvent,
+  ListingCancelled as ListingCancelledEvent,
+} from "../generated/CyberFortuneNFT/CyberFortuneNFT";
+import { NFT, Listing, Transaction } from "../generated/schema";
 
-function getTimestamp(block: ethereum.Block): BigInt {
-  return block.timestamp;
-}
-
-function getBlockNumber(block: ethereum.Block): BigInt {
-  return block.number;
-}
-
-export function handleTransfer(event: ethereum.Event): void {
+export function handleTransfer(event: TransferEvent): void {
   let nft = NFT.load(event.params.tokenId.toString());
   let contract = CyberFortuneNFT.bind(event.address);
 
@@ -29,14 +25,14 @@ export function handleTransfer(event: ethereum.Event): void {
     nft.blessing = blessingResult.reverted ? "" : blessingResult.value;
 
     let rarityResult = contract.try_getRarity(event.params.tokenId);
-    nft.rarity = rarityResult.reverted ? 0 : rarityResult.value.toI32();
+    nft.rarity = rarityResult.reverted ? 0 : rarityResult.value;
   }
 
   nft.owner = event.params.to;
   nft.save();
 }
 
-export function handleItemListed(event: ethereum.Event): void {
+export function handleItemListed(event: ItemListedEvent): void {
   let tokenId = event.params.tokenId;
   let seller = event.params.seller;
   let price = event.params.price;
@@ -84,7 +80,7 @@ export function handleItemListed(event: ethereum.Event): void {
   tx.save();
 }
 
-export function handleItemBought(event: ethereum.Event): void {
+export function handleItemBought(event: ItemBoughtEvent): void {
   let tokenId = event.params.tokenId;
   let buyer = event.params.buyer;
   let price = event.params.price;
@@ -117,7 +113,7 @@ export function handleItemBought(event: ethereum.Event): void {
   }
 }
 
-export function handleListingCancelled(event: ethereum.Event): void {
+export function handleListingCancelled(event: ListingCancelledEvent): void {
   let tokenId = event.params.tokenId;
 
   // Update listing

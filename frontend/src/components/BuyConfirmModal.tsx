@@ -81,7 +81,7 @@ export function BuyConfirmModal({
 
       {/* 弹窗内容 */}
       <div className="relative glass-cyber rounded-2xl p-6 w-full max-w-md mx-4">
-        <h2 className="text-xl font-bold text-white mb-4">Confirm Purchase</h2>
+        <h2 className="text-xl font-bold text-white mb-4">确认购买</h2>
 
         {/* NFT 信息 */}
         <div className="mb-4 p-4 bg-cyber-bg-light rounded-lg">
@@ -92,11 +92,11 @@ export function BuyConfirmModal({
         {/* 价格详情 */}
         <div className="mb-4 space-y-2">
           <div className="flex justify-between text-gray-400 text-sm">
-            <span>Price</span>
+            <span>价格</span>
             <span>{listing.priceEth} ETH</span>
           </div>
           <div className="flex justify-between text-gray-400 text-sm">
-            <span>Seller</span>
+            <span>卖家</span>
             <span className="text-white">
               {listing.seller.slice(0, 6)}...{listing.seller.slice(-4)}
             </span>
@@ -105,7 +105,7 @@ export function BuyConfirmModal({
 
         {/* 警告信息 */}
         <div className="mb-4 p-3 bg-yellow-500/20 border border-yellow-500 rounded-lg text-yellow-400 text-sm">
-          Please make sure you have enough ETH to complete this purchase.
+          请确保你有足够的 ETH 来完成购买。
         </div>
 
         {/* 错误信息 */}
@@ -118,12 +118,12 @@ export function BuyConfirmModal({
         {/* 状态信息 */}
         {isWriting && (
           <div className="mb-4 p-3 bg-blue-500/20 border border-blue-500 rounded-lg text-blue-400 text-sm">
-            Please confirm in your wallet...
+            请在钱包中确认交易...
           </div>
         )}
         {isConfirming && (
           <div className="mb-4 p-3 bg-yellow-500/20 border border-yellow-500 rounded-lg text-yellow-400 text-sm">
-            Confirming transaction on chain...
+            链上确认中...
           </div>
         )}
 
@@ -134,14 +134,14 @@ export function BuyConfirmModal({
             disabled={isLoading}
             className="flex-1 px-4 py-3 bg-gray-700 hover:bg-gray-600 text-white font-medium rounded-lg transition-colors disabled:opacity-50"
           >
-            Cancel
+            取消
           </button>
           <button
             onClick={handleBuy}
             disabled={isLoading}
             className="flex-1 px-4 py-3 bg-cyber-primary hover:bg-cyber-primary/80 text-black font-bold rounded-lg transition-colors disabled:opacity-50"
           >
-            {isLoading ? 'Processing...' : 'Buy Now'}
+            {isLoading ? '处理中...' : '立即购买'}
           </button>
         </div>
       </div>

@@ -2,8 +2,6 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getListingByTokenId, getTransactionHistory } from '@/lib/db/marketplace';
 import type { ListingDetail, MarketTransaction } from '@/lib/types';
 
-const WEI_PER_ETH = BigInt(1e18);
-
 function weiToEth(wei: string): string {
   const weiBigInt = BigInt(wei);
   const eth = Number(weiBigInt) / 1e18;

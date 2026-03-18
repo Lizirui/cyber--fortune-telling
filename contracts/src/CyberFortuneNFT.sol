@@ -51,8 +51,11 @@ contract CyberFortuneNFT is ERC721, ERC721URIStorage, ERC2981, Ownable, Reentran
     /// @dev 用户上次 Mint 的日期
     mapping(address => uint256) public lastMintDay;
 
-    /// @dev 用户当前交易的 Mint 数量
-    mapping(address => uint256) public txMintCount;
+    /// @dev 用户上次 Mint 的区块高度
+    mapping(address => uint256) public lastMintBlock;
+
+    /// @dev 用户当前区块的 Mint 数量
+    mapping(address => uint256) public blockMintCount;
 
     /// @dev Token ID => 祝福语文本
     mapping(uint256 => string) public blessings;
@@ -98,7 +101,7 @@ contract CyberFortuneNFT is ERC721, ERC721URIStorage, ERC2981, Ownable, Reentran
         require(!listings[tokenId].isListed, "Already listed");
 
         // 授权合约可以转移 NFT
-        approve(address(this), tokenId);
+        _setApprovalForAll(msg.sender, address(this), true);
         // 创建挂单
         listings[tokenId] = Listing(msg.sender, price, true);
         emit ItemListed(tokenId, msg.sender, price);
@@ -112,18 +115,28 @@ contract CyberFortuneNFT is ERC721, ERC721URIStorage, ERC2981, Ownable, Reentran
         Listing memory listing = listings[tokenId];
         // 检查是否已挂单
         require(listing.isListed, "Not listed");
+        // 检查卖家仍然是 NFT 持有者
+        require(ownerOf(tokenId) == listing.seller, "Seller no longer owns NFT");
         // 检查支付金额是否足够
         require(msg.value >= listing.price, "Insufficient payment");
-        // 检查是否已授权
-        require(getApproved(tokenId) == address(this), "Not approved");
+        // 检查是否已授权 (使用 isApprovedForAll 检查 setApprovalForAll)
+        require(isApprovedForAll(listing.seller, address(this)), "Not approved");
 
+        // 使用 ERC-2981 获取版税信息
+        (address royaltyReceiver, uint256 royaltyAmount) = royaltyInfo(tokenId, msg.value);
         // 计算卖家收入（扣除版税后）
-        uint256 sellerAmount = msg.value;
+        uint256 sellerAmount = msg.value - royaltyAmount;
 
         // 转移 NFT
         _transfer(listing.seller, msg.sender, tokenId);
         // 向卖家付款
-        payable(listing.seller).transfer(sellerAmount);
+        (bool success1, ) = payable(listing.seller).call{value: sellerAmount}("");
+        require(success1, "Transfer to seller failed");
+        // 向版税接收者付款
+        if (royaltyAmount > 0) {
+            (bool success2, ) = payable(royaltyReceiver).call{value: royaltyAmount}("");
+            require(success2, "Transfer to royalty receiver failed");
+        }
 
         // 删除挂单
         delete listings[tokenId];
@@ -181,7 +194,8 @@ contract CyberFortuneNFT is ERC721, ERC721URIStorage, ERC2981, Ownable, Reentran
         uint256 amount = creatorRevenue[owner()];
         require(amount > 0, "No revenue");
         creatorRevenue[owner()] = 0;
-        payable(owner()).transfer(amount);
+        (bool success, ) = payable(owner()).call{value: amount}("");
+        require(success, "Transfer failed");
     }
 
     /**
@@ -190,24 +204,6 @@ contract CyberFortuneNFT is ERC721, ERC721URIStorage, ERC2981, Ownable, Reentran
     constructor() ERC721("Cyber Fortune", "CFORTUNE") Ownable(msg.sender) {
         // 设置默认版税为 5%
         _setDefaultRoyalty(owner(), 500);
-    }
-
-    /**
-     * @dev Mint 祝福语 NFT
-     * @param blessing 祝福语文本
-     * @param rarity 稀有度等级
-     */
-    function mint(string calldata blessing, uint8 rarity) external payable {
-        // 检查支付费用
-        require(msg.value >= MINT_FEE, "Insufficient mint fee");
-        // 检查未超过最大供应量
-        require(_nextTokenId < MAX_SUPPLY, "Max supply reached");
-
-        uint256 tokenId = _nextTokenId++;
-        _safeMint(msg.sender, tokenId);
-        blessings[tokenId] = blessing;
-        rarities[tokenId] = rarity;
-        _setTokenURI(tokenId, _generateTokenURI(tokenId));
     }
 
     /**
@@ -220,16 +216,16 @@ contract CyberFortuneNFT is ERC721, ERC721URIStorage, ERC2981, Ownable, Reentran
     }
 
     /**
-     * @dev 通过签名验证 Mint NFT（先付钱后揭示祝福语）
+     * @dev 通过签名验证 Mint NFT
      * @param blessing 祝福语文本
      * @param rarity 稀有度等级
-     * @param expiresAt 签名过期时间（保留参数但忽略，使用 max uint256）
-     * @param signature 签名数据（只验证 tokenId + userAddress）
+     * @param blessingHash 祝福语的 keccak256 哈希（用于验证祝福语未被篡改）
+     * @param signature 签名数据（验证 tokenId + userAddress + rarity + blessingHash）
      */
     function mintWithSignature(
         string calldata blessing,
         uint8 rarity,
-        uint256 expiresAt, // 保留参数但不再验证，使用 max uint256
+        bytes32 blessingHash,
         bytes calldata signature
     ) external payable nonReentrant {
         // 检查支付费用
@@ -238,15 +234,16 @@ contract CyberFortuneNFT is ERC721, ERC721URIStorage, ERC2981, Ownable, Reentran
         require(_nextTokenId < MAX_SUPPLY, "Max supply reached");
         // 检查稀有度是否有效
         require(rarity <= 5, "Invalid rarity");
-        // 检查每笔交易 Mint 数量限制
-        require(txMintCount[msg.sender] < MAX_MINT_PER_TX, "Max mint per tx");
+        // 验证祝福语哈希
+        require(keccak256(abi.encodePacked(blessing)) == blessingHash, "Blessing hash mismatch");
+        // 检查每笔交易 Mint 数量限制（基于区块高度）
+        _checkBlockMintLimit();
 
-        // 增加当前交易计数
-        txMintCount[msg.sender]++;
+        // 增加当前区块计数
+        blockMintCount[msg.sender]++;
 
-        // 构建签名哈希（只包含 tokenId 和 userAddress，不包含 blessing/rarity）
-        // 这样前端可以在不知道 blessing 的情况下调用合约
-        bytes32 hash = keccak256(abi.encodePacked(_nextTokenId, msg.sender));
+        // 构建签名哈希（包含 tokenId + userAddress + rarity + blessingHash）
+        bytes32 hash = keccak256(abi.encodePacked(_nextTokenId, msg.sender, rarity, blessingHash));
         bytes32 ethSignedHash = hash.toEthSignedMessageHash();
 
         // 验证签名
@@ -269,6 +266,19 @@ contract CyberFortuneNFT is ERC721, ERC721URIStorage, ERC2981, Ownable, Reentran
     }
 
     /**
+     * @dev 检查每区块 Mint 数量限制
+     */
+    function _checkBlockMintLimit() internal {
+        // 如果是新区块，重置计数
+        if (block.number > lastMintBlock[msg.sender]) {
+            blockMintCount[msg.sender] = 0;
+            lastMintBlock[msg.sender] = block.number;
+        }
+        // 检查是否超过每区块限制
+        require(blockMintCount[msg.sender] < MAX_MINT_PER_TX, "Max mint per block");
+    }
+
+    /**
      * @dev 检查每日 Mint 限制
      */
     function _checkMintLimit() internal {
@@ -283,6 +293,22 @@ contract CyberFortuneNFT is ERC721, ERC721URIStorage, ERC2981, Ownable, Reentran
         require(dailyMintedCount[msg.sender] < MAX_DAILY_MINT, "Daily mint limit");
         // 增加每日计数
         dailyMintedCount[msg.sender]++;
+    }
+
+    /**
+     * @dev 获取祝福语
+     * @param tokenId Token ID
+     */
+    function getBlessing(uint256 tokenId) external view returns (string memory) {
+        return blessings[tokenId];
+    }
+
+    /**
+     * @dev 获取稀有度
+     * @param tokenId Token ID
+     */
+    function getRarity(uint256 tokenId) external view returns (uint8) {
+        return rarities[tokenId];
     }
 
     /**
@@ -309,32 +335,10 @@ contract CyberFortuneNFT is ERC721, ERC721URIStorage, ERC2981, Ownable, Reentran
      * @dev 生成 Token URI (JSON 格式)
      * @param tokenId Token ID
      */
-    function _generateTokenURI(uint256 tokenId) internal view returns (string memory) {
+    function _generateTokenURI(uint256 tokenId) internal pure returns (string memory) {
         return string(abi.encodePacked(
             "data:application/json,",
-            '{"name":"Fortune #', _toString(tokenId), '"}'
+            '{"name":"Fortune #', Strings.toString(tokenId), '"}'
         ));
-    }
-
-    /**
-     * @dev 将 uint256 转换为字符串
-     */
-    function _toString(uint256 value) internal pure returns (string memory) {
-        if (value == 0) {
-            return "0";
-        }
-        uint256 temp = value;
-        uint256 digits;
-        while (temp != 0) {
-            digits++;
-            temp /= 10;
-        }
-        bytes memory buffer = new bytes(digits);
-        while (value != 0) {
-            digits -= 1;
-            buffer[digits] = bytes1(uint8(48 + uint256(value % 10)));
-            value /= 10;
-        }
-        return string(buffer);
     }
 }
