@@ -38,7 +38,7 @@ pnpm-debug.log*
 Thumbs.db
 
 # 本地 Claude 设置
-.claude/settings.local.json
+.claude
 
 # pnpm (可选 - 如果想锁定精确版本可以保留)
 # pnpm-lock.yaml
