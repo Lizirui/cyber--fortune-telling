@@ -1,15 +1,15 @@
 # 赛博算命 (Cyber Fortune) NFT
 
-一个融合东方玄学与赛博朋克美学的 Web3 NFT 盲盒项目。用户通过 Mint 获得由 AI 生成的不同稀有度的祝福语 NFT。
+一个融合东方玄学与赛博朋克美学的 Web3 NFT 项目。用户通过 Mint 获得由 AI 生成的不同稀有度的祝福语 NFT。
 
 ## 项目简介
 
 ### 核心功能
 
 - **盲盒 Mint**: 用户支付 0.01 ETH 铸造盲盒，获得随机稀有度的祝福 NFT
-- **AI 祝福语生成**: 后端调用 DeepSeek API 生成独特的祝福语
+- **AI 祝福语生成**: 后端调用 AI API 生成独特的祝福语
 - **稀有度系统**: 6 个稀有度等级（N、R、SR、SSR、UR、SP），概率逐级递减
-- **市场交易**: 支持 NFT 挂单、购买、定价修改
+- **市场交易**: 支持 NFT 挂单、购买、取消
 - **个人中心**: 查看和管理已拥有的 NFT
 
 ### 技术栈
@@ -17,30 +17,34 @@
 | 模块 | 技术 |
 |------|------|
 | 智能合约 | Solidity + Foundry |
-| 后端 API | Express + TypeScript + DeepSeek |
-| 前端 DApp | Next.js 14 + wagmi + RainbowKit |
-| 存储 | IPFS (NFT 元数据) |
+| 前端 + API | Next.js 14 (App Router) + API Routes |
+| Web3 | wagmi + RainbowKit + viem |
+| 存储 | Vercel KV (Redis) + IPFS |
+| 索引 | The Graph (Subgraph) |
+| 部署 | Vercel |
 | 支付 | Base (L2) |
 
 ### 项目结构
 
 ```
 cyber-fortune-nft/
+├── pnpm-workspace.yaml
+├── package.json
+│
 ├── contracts/          # 智能合约 (Foundry)
 │   ├── src/           # Solidity 源码
 │   ├── script/        # 部署脚本
 │   └── test/          # 合约测试
 │
-├── backend/           # 后端 API (Express)
+├── frontend/          # 前端 DApp + API (Next.js)
 │   └── src/
-│       ├── services/  # AI、签名、SVG 服务
-│       └── routes/    # API 路由
+│       ├── app/       # App Router 页面 + API 路由
+│       ├── components/# React 组件
+│       └── lib/       # wagmi 配置、合约 ABI、数据库
 │
-└── frontend/          # 前端 DApp (Next.js)
-    └── src/
-        ├── app/       # App Router 页面
-        ├── components/# React 组件
-        └── lib/       # wagmi 配置、合约 ABI
+└── subgraph/          # The Graph 索引
+    ├── src/           # 映射逻辑
+    └── subgraph.yaml  # 子图配置
 ```
 
 ---
@@ -58,8 +62,8 @@ cyber-fortune-nft/
 
 ```bash
 # 克隆仓库
-git clone https://github.com/your-repo/cyber-fortune-nft.git
-cd cyber-fortune-nft
+git clone https://github.com/Lizirui/cyber--fortune-telling.git
+cd cyber-fortune-telling
 
 # 安装依赖
 pnpm install
@@ -73,12 +77,10 @@ foundryup
 
 #### 1. 智能合约 (.env)
 
-项目已提供环境变量模板文件:
-
 ```bash
 cd contracts
 
-# Sepolia 测试网部署 (推荐开发测试使用)
+# Sepolia 测试网部署
 cp .env.sepolia .env
 
 # 主网部署
@@ -95,49 +97,37 @@ BASE_SEPOLIA_RPC_URL=https://sepolia.base.org
 BASE_RPC_URL=https://mainnet.base.org
 
 # 部署钱包私钥 (不要提交到 Git!)
-PRIVATE_KEY=0x_your_private_key_without_0x_prefix
+PRIVATE_KEY=0x_your_private_key
 
 # 授权签名者地址 (用于验证后端签名)
 AUTHORIZED_SIGNER=0x_your_wallet_address
 
-# BaseScan API Key (验证合约用)
+# BaseScan API Key
 BASESCAN_API_KEY=your_basescan_api_key
 ```
 
-#### 2. 后端 (.env)
-
-创建 `backend/.env`:
-
-```bash
-PORT=3001
-DEEPSEEK_API_KEY=sk-xxxxxxxxxxxxxxxxxxxxx
-# 部署合约后填入
-CONTRACT_ADDRESS=0x_your_contract_address
-# 与 contracts/.env 相同
-SIGNER_PRIVATE_KEY=0x_your_private_key_without_0x_prefix
-FRONTEND_URL=http://localhost:3000
-```
-
-#### 3. 前端 (.env.local)
+#### 2. 前端 (.env.local)
 
 创建 `frontend/.env.local`:
 
 ```bash
-NEXT_PUBLIC_BACKEND_URL=http://localhost:3001
+# 后端 API (本地开发时使用 Next.js API 代理)
+NEXT_PUBLIC_BACKEND_URL=http://localhost:3000
+
+# 合约地址 (部署合约后填入)
 NEXT_PUBLIC_CONTRACT_ADDRESS=0x_your_contract_address
-# WalletConnect 项目 ID (演示用)
-NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID=a4d4ab2e2e26c55f4ebc54e5d8a7e5c
+
+# WalletConnect 项目 ID
+NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID=your_project_id
 ```
 
 ### 启动开发服务器
 
 ```bash
-# 一键启动所有服务 (前端 + 后端)
+# 启动前端开发服务器
 pnpm dev
 
-# 或分别启动
-cd frontend && pnpm dev    # 前端: http://localhost:3000
-cd backend && pnpm dev     # 后端: http://localhost:3001
+# 访问 http://localhost:3000
 ```
 
 ---
@@ -154,9 +144,8 @@ cd backend && pnpm dev     # 后端: http://localhost:3001
    - 区块浏览器: `https://sepolia.basescan.org`
 
 2. 获取测试 ETH:
-   - [Base Sepolia Faucet](https://bridge.base.org/deposit) - 需要 ETH Sepolia
+   - [Base Sepolia Faucet](https://bridge.base.org/deposit)
    - [Alchemy Sepolia Faucet](https://www.alchemy.com/faucets/ethereum-sepolia)
-   - 或在 Discord #base-sepolia 频道请求
 
 ### 步骤 2: 部署合约到 Sepolia
 
@@ -173,29 +162,9 @@ forge build
 
 # 4. 部署到 Base Sepolia
 forge script script/Deploy.s.sol:DeployScript --rpc-url base_sepolia --broadcast --private-key $PRIVATE_KEY
-
-# 5. 验证合约 (可选)
-forge verify-contract <CONTRACT_ADDRESS> src/CyberFortuneNFT.sol:CyberFortuneNFT --chain base-sepolia --etherscan-api-key $BASESCAN_API_KEY
 ```
 
-部署成功后会输出合约地址，保存下来用于后续配置。
-
-> **提示**: 如果想使用 forge 加载私钥，也可以直接使用 `source .env && forge script ...`
-
-### 步骤 3: 配置后端
-
-```bash
-cd backend
-
-# 更新 .env
-# CONTRACT_ADDRESS 填入上一步部署的合约地址
-# SIGNER_PRIVATE_KEY 填入部署钱包的私钥
-
-# 启动后端
-pnpm dev
-```
-
-### 步骤 4: 配置前端
+### 步骤 3: 配置前端
 
 ```bash
 cd frontend
@@ -206,188 +175,76 @@ cd frontend
 pnpm dev
 ```
 
-### 步骤 5: 测试完整流程
+### 步骤 4: 测试完整流程
 
 1. 打开 http://localhost:3000
 2. 连接 MetaMask (确保切换到 Base Sepolia 网络)
 3. 确认钱包有足够的测试 ETH
-4. 点击"开悟"按钮 Mint 盲盒
+4. 点击"开始算命"按钮 Mint 盲盒
 5. 等待交易确认
 6. 在个人中心查看 NFT
 7. 在市场查看和交易 NFT
 
-### 调试技巧
+---
 
-```bash
-# 查看合约交互日志
-forge test -vvv
+## 部署到 Vercel
 
-# 前端调试 - 打开浏览器开发者工具
-# Network 标签查看 API 请求
-# Console 标签查看 wagmi 日志
+### 方式一: Git 集成部署 (推荐)
 
-# 后端调试
-# 查看终端输出的日志
-# 使用 curl 测试 API:
-curl -X POST http://localhost:3001/api/generate \
-  -H "Content-Type: application/json" \
-  -d '{"rarity": 2}'
+1. 访问 https://vercel.com/new/import
+2. 选择 `frontend` 文件夹导入
+3. 配置项目:
+   - Framework Preset: `Next.js`
+   - Build Command: `cd ../ && pnpm install && cd frontend && pnpm build`
+   - Output Directory: `.next`
+   - Install Command: `pnpm install`
+4. 添加环境变量
+5. 点击 Deploy
+
+### 环境变量 (Vercel)
+
 ```
+NEXT_PUBLIC_BACKEND_URL=https://your-vercel-domain.vercel.app
+NEXT_PUBLIC_CONTRACT_ADDRESS=0x_your_contract_address
+NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID=your_project_id
+CRON_SECRET=your-cron-secret
+```
+
+### Cron Job
+
+部署后会自动配置每天凌晨同步链上市场数据。
 
 ---
 
-## 主网部署流程
+## API 端点
 
-### 重要提醒
-
-部署主网前请确保:
-- ✅ 已在测试网完成完整测试
-- ✅ 已审计智能合约 (可选但推荐)
-- ✅ 准备好主网 ETH 和 BASE
-
-### 步骤 1: 准备主网配置
-
-项目已提供环境变量模板:
-
-```bash
-cd contracts
-
-# 复制主网配置模板
-cp .env.mainnet .env
-```
-
-编辑 `.env` 填入以下内容:
-
-```bash
-# Base Sepolia RPC (备用)
-BASE_SEPOLIA_RPC_URL=https://sepolia.base.org
-
-# Base 主网 RPC
-BASE_RPC_URL=https://mainnet.base.org
-
-# 主网部署私钥 (建议使用硬件钱包或多重签名)
-PRIVATE_KEY=0x_xxx
-
-# 授权签名者
-AUTHORIZED_SIGNER=0x_xxx
-
-# BaseScan API Key
-BASESCAN_API_KEY=your_basescan_api_key
-```
-
-创建 `backend/.env.production`:
-
-```bash
-PORT=3001
-DEEPSEEK_API_KEY=sk-xxxxxxxxxxxxx
-CONTRACT_ADDRESS=0x_contract_address_on_mainnet
-SIGNER_PRIVATE_KEY=0x_xxx
-FRONTEND_URL=https://your-domain.com
-```
-
-创建 `frontend/.env.production`:
-
-```bash
-NEXT_PUBLIC_BACKEND_URL=https://api.your-domain.com
-NEXT_PUBLIC_CONTRACT_ADDRESS=0x_contract_address_on_mainnet
-NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID=your_walletconnect_project_id
-```
-
-### 步骤 2: 部署智能合约
-
-```bash
-cd contracts
-
-# 1. 复制主网配置
-cp .env.mainnet .env
-
-# 2. 编辑 .env 填入 PRIVATE_KEY 和 BASESCAN_API_KEY
-
-# 3. 部署到 Base 主网
-forge script script/Deploy.s.sol:DeployScript --rpc-url base --broadcast --private-key $PRIVATE_KEY --verify
-
-# 验证通过后输出合约地址
-```
-
-### 步骤 3: 部署后端
-
-推荐使用 Docker 或托管服务 (Railway, Render, Fly.io):
-
-```dockerfile
-# backend/Dockerfile
-FROM node:20-alpine
-WORKDIR /app
-COPY package.json pnpm-lock.yaml ./
-RUN npm install -g pnpm && pnpm install --frozen-lockfile
-COPY . .
-RUN pnpm build
-EXPOSE 3001
-CMD ["pnpm", "start"]
-```
-
-```bash
-# 构建并推送 Docker 镜像
-docker build -t cyber-fortune-backend:latest ./backend
-docker push your-registry/cyber-fortune-backend:latest
-```
-
-### 步骤 4: 部署前端
-
-推荐使用 Vercel:
-
-```bash
-cd frontend
-
-# 构建生产版本
-pnpm build
-
-# 使用 Vercel 部署
-vercel --prod
-# 或手动部署到任意静态托管
-```
-
-### 步骤 5: 验证部署
-
-1. 访问前端 URL
-2. 连接钱包 (切换到 Base 主网)
-3. 执行一次完整的 Mint 流程
-4. 确认:
-   - NFT 可以正常 Mint
-   - 祝福语正常生成
-   - NFT 显示正确
-   - 市场功能正常
-
----
-
-## API 文档
-
-### 后端 API 端点
+前端 API 路由位于 `frontend/src/app/api/`:
 
 | 方法 | 路径 | 描述 |
 |------|------|------|
-| POST | `/api/generate` | 生成祝福语 (需签名) |
-| POST | `/api/mint` | 验证签名并返回 mint 参数 |
-| GET | `/api/token/:tokenId` | 获取 NFT 元数据 |
-| POST | `/api/list` | 挂售 NFT |
-| POST | `/api/buy` | 购买 NFT |
-| POST | `/api/cancel-listing` | 取消挂售 |
-
-### 签名验证
-
-后端使用 ECDSA (secp256k1) 对祝福语进行签名，前端在 Mint 时需验证签名。
+| POST | `/api/mint/generate` | 生成祝福语并签名 |
+| GET | `/api/mint/reveal/[tokenId]` | 揭示 NFT 祝福语 |
+| GET | `/api/market/listings` | 获取市场挂单列表 |
+| GET | `/api/market/listings/[tokenId]` | 获取特定挂单 |
+| GET | `/api/market/listings-onchain` | 获取链上挂单 |
+| GET | `/api/market/history` | 获取交易历史 |
+| POST | `/api/market/sync` | 同步链上数据 (Cron) |
+| GET | `/api/nft/user/[address]` | 获取用户 NFT |
+| POST | `/api/nft/listing/[tokenId]` | 上架 NFT |
+| GET | `/api/health` | 健康检查 |
 
 ---
 
 ## 常见问题
 
-### Q: Mint 失败显示 "invalid signature"
-A: 检查后端 `SIGNER_PRIVATE_KEY` 与合约 `AUTHORIZED_SIGNER` 是否匹配
+### Q: Mint 失败显示 "Invalid signature"
+A: 检查前端 `PRIVATE_KEY` 与合约 `AUTHORIZED_SIGNER` 是否匹配
 
 ### Q: 交易卡住
-A: 在 MetaMask 中加速或取消交易，或设置更高的 gas price
+A: 在 MetaMask 中加速或取消交易
 
-### Q: AI 祝福语生成失败
-A: 检查后端 `DEEPSEEK_API_KEY` 是否有效
+### Q: 市场数据不更新
+A: 等待 Cron 任务执行 (每天凌晨)，或手动触发 sync
 
 ### Q: 前端无法连接钱包
 A: 确保已安装 MetaMask 并切换到正确的网络
@@ -400,5 +257,5 @@ A: 确保已安装 MetaMask 并切换到正确的网络
 - [Foundry 文档](https://book.getfoundry.sh)
 - [wagmi](https://wagmi.sh)
 - [RainbowKit](https://www.rainbowkit.com)
-- [DeepSeek API](https://platform.deepseek.com)
-- [WalletConnect Cloud](https://cloud.walletconnect.com)
+- [Vercel](https://vercel.com)
+- [The Graph](https://thegraph.com)

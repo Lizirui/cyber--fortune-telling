@@ -11,7 +11,6 @@
 在该项目中工作时，必须先阅读对应子项目的 CLAUDE.md：
 
 - **frontend/** → 先阅读 `frontend/CLAUDE.md`
-- **backend/** → 先阅读 `backend/CLAUDE.md`
 - **contracts/** → 先阅读 `contracts/CLAUDE.md`
 
 ## 开发命令
@@ -26,16 +25,13 @@ pnpm dev
 # 构建所有包
 pnpm build
 
-# 运行测试
-pnpm test
-
 # 代码检查
 pnpm lint
 ```
 
 ## 项目架构
 
-这是一个包含三个包的 pnpm monorepo：
+这是一个包含两个包的 pnpm monorepo：
 
 ```
 cyber-fortune-nft/
@@ -45,13 +41,12 @@ cyber-fortune-nft/
 ├── contracts/          # 智能合约（Foundry）
 │   └── CLAUDE.md
 │
-├── backend/           # API 服务（Express + TypeScript）
-│   └── CLAUDE.md
-│
-└── frontend/          # Web3 DApp（Next.js + wagmi）
+└── frontend/           # 前端 + API（Next.js）
     └── CLAUDE.md
 ```
 
+**注意**: 后端 API 已合并到前端的 Next.js API Routes 中，部署到 Vercel。
+
 ## 更新 CLAUDE.md
 
-当修改任何子项目（frontend、backend、contracts）时，如果更改影响了项目的结构、命令或架构，请更新对应的 CLAUDE.md。
+当修改任何子项目（frontend、contracts）时，如果更改影响了项目的结构、命令或架构，请更新对应的 CLAUDE.md。

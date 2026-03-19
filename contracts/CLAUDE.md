@@ -28,10 +28,15 @@ forge clean        # 清理构建产物
 ## 关键文件
 
 ```
-src/               # 智能合约源码
-src/CyberFortuneNFT.sol  # 主 NFT 合约
-script/            # 部署脚本
-test/              # 合约测试
+contracts/
+├── src/                    # 智能合约源码
+│   └── CyberFortuneNFT.sol # 主 NFT 合约
+├── script/                 # 部署脚本
+│   ├── Deploy.s.sol       # 部署脚本
+│   └── UpdateSigner.s.sol # 更新签名者脚本
+├── test/                   # 合约测试
+├── lib/                    # 第三方库 (OpenZeppelin)
+└── out/                    # 编译输出
 ```
 
 ## 网络
@@ -39,14 +44,27 @@ test/              # 合约测试
 - `base-sepolia` - Base Sepolia 测试网
 - `base` - Base 主网
 
+## 部署
+
+```bash
+cd contracts
+
+# Sepolia 测试网
+cp .env.sepolia .env
+# 编辑 .env 填入 PRIVATE_KEY 等
+
+forge build
+forge script script/Deploy.s.sol:DeployScript --rpc-url base_sepolia --broadcast --private-key $PRIVATE_KEY
+```
+
 ## 环境变量
 
 ```
-BASE_SEPOLIA_RPC_URL
-BASE_RPC_URL
-PRIVATE_KEY
-BASESCAN_API_KEY
-AUTHORIZED_SIGNER
+BASE_SEPOLIA_RPC_URL=https://sepolia.base.org
+BASE_RPC_URL=https://mainnet.base.org
+PRIVATE_KEY=0x...
+AUTHORIZED_SIGNER=0x...  # 必须与前端 PRIVATE_KEY 对应的地址一致
+BASESCAN_API_KEY=...
 ```
 
 ## 说明
