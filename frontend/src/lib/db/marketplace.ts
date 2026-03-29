@@ -81,6 +81,18 @@ export async function initializeMarketplaceTables(): Promise<void> {
         updated_at TIMESTAMP DEFAULT NOW()
       )
     `);
+
+    // 祝福语池表
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS blessing_pool (
+        id SERIAL PRIMARY KEY,
+        rarity SMALLINT NOT NULL,
+        blessing TEXT NOT NULL,
+        is_used BOOLEAN DEFAULT FALSE,
+        created_at TIMESTAMP DEFAULT NOW(),
+        used_at TIMESTAMP
+      )
+    `);
   } finally {
     client.release();
   }
